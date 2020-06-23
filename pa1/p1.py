@@ -51,6 +51,17 @@ def navigation_edges(level, cell):
              ((1,1), 1.4142135623730951),
              ... ]
     """
+    edges = []
+    for i in range (-1,2):
+        for j in range (-1,2):
+            if cell[0] == i and cell[1] == j:
+                """ Do Nothing """
+            elif (i,j) in level['walls']:
+                """ Do Nothing """
+            else:
+                edges.append(((i,j), cost_calculator(cell, (i,j), level)))
+    return edges
+
     pass
 
 
@@ -111,3 +122,12 @@ if __name__ == '__main__':
 
     # Use this function to calculate the cost to all reachable cells from an origin point.
     cost_to_all_cells(filename, src_waypoint, 'my_costs.csv')
+
+
+
+def cost_calculator(cell1, cell2, level):
+    tempcost = 0.5*level['spaces'][cell1] + 0.5*level['spaces'][cell2]
+    if cell1[0] == cell2[0] or cell1[1] == cell2[1]:
+        return tempcost
+    else
+        return tempcost * sqrt(2)

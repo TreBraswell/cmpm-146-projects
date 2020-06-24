@@ -54,12 +54,12 @@ def navigation_edges(level, cell):
     edges = []
     for i in range (-1,2):
         for j in range (-1,2):
-            if cell[0] == i and cell[1] == j:
+            if i == 0 and j == 0:
                 """ Do Nothing """
-            elif (i,j) in level['walls']:
+            elif not (cell[0]+i,cell[1]+j) in level['spaces']:
                 """ Do Nothing """
             else:
-                edges.append(((i,j), cost_calculator(cell, (i,j), level)))
+                edges.append(((cell[0]+i,cell[1]+j), cost_calculator(cell, (cell[0]+i,cell[1]+j), level)))
     return edges
 
     pass

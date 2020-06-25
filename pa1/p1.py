@@ -75,13 +75,17 @@ assert queue == [] """
     if done == 1:
 
         goback = []
+        print(destination)
         current = destination
-        """for a in cost_so_far:
-            print(a)    """
-        while current != 0:
+
+        for a in came_from:
+            print(a)    
+        while current != initial_position:
             goback.insert(0,current)
+            print(current)
             print("infinite loop on line 82")
             current = came_from[current]
+        goback.insert(0,initial_position)
         print("we done")
         return goback
     print("we done fail")

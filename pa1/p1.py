@@ -2,9 +2,17 @@ from p1_support import load_level, show_level, save_level_costs
 from math import inf, sqrt
 from heapq import heappop, heappush
 
+
+def cost_calculator(cell1, cell2, level):
+    tempcost = 0.5*level['spaces'][cell1] + 0.5*level['spaces'][cell2]
+    if cell1[0] == cell2[0] or cell1[1] == cell2[1]:
+        return tempcost
+    else:
+        return tempcost * sqrt(2)
+
 def heuristic(a, b):
-   # Manhattan distance on a square grid
-   return abs(a.x - b.x) + abs(a.y - b.y)
+
+    return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
 def dijkstras_shortest_path(initial_position, destination, graph, adj):
     """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
@@ -42,12 +50,11 @@ assert queue == [] """
     heappush(frontier, (heuristic(initial_position,destination),initial_position) ) #putting our instial position with its cost
     came_from = {} # where we have been
     cost_so_far = {} #the cost so far
-    came_from[initial_position] = "None" #just setting up the intial destination
+    came_from[initial_position] = 0 #just setting up the intial destination
     cost_so_far[initial_position] = 0 #where were starting
     done = 0
-    while not frontier.empty():
+    while frontier:
         current = heappop(frontier) # gets lowest priority
-        
         if current[1] == destination: # if it equals our goal destnation
             done = 1
             break
@@ -55,7 +62,6 @@ assert queue == [] """
      #adj = navigation_edges(
 
         for next in adj: # for all elements in adjacent to it
-           
             if next in cost_so_far:
                 if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
                     cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
@@ -63,17 +69,22 @@ assert queue == [] """
             else:
                 cost_so_far[next[0]] =  next[1] +cost_so_far[current[1]]
                 came_from[next[0]] = current[1]
-                priority = cost_so_far[next[0]] + heuristic(next[0],destination[0])
+                priority = cost_so_far[next[0]] + heuristic(next[0],destination)
                 heappush(frontier,(priority,next[0]))
     if done == 1:
 
         goback = []
         current = destination
-        while current != "None":
+        """for a in cost_so_far:
+            print(a)    """
+        while current != 0:
             goback.insert(0,current)
+            print("infinite loop on line 82")
             current = came_from[current]
+        print("we done")
         return goback
-    return None  
+    print("we done fail")
+    return None 
     pass
 
 
@@ -94,7 +105,7 @@ def dijkstras_shortest_path_to_all(initial_position, graph, adj):
     cost_so_far = {} #the cost so far
     cost_so_far[initial_position] = 0 #where were starting
     done = 0
-    while not frontier.empty():
+    while frontier:
         current = heappop(frontier) # gets lowest priority
         
         adj = navigation_edges(graph,current[1])# reset which variables were going to look at
@@ -205,9 +216,3 @@ if __name__ == '__main__':
 
 
 
-def cost_calculator(cell1, cell2, level):
-    tempcost = 0.5*level['spaces'][cell1] + 0.5*level['spaces'][cell2]
-    if cell1[0] == cell2[0] or cell1[1] == cell2[1]:
-        return tempcost
-    else
-        return tempcost * sqrt(2)

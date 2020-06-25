@@ -19,27 +19,47 @@ def dijkstras_shortest_path(initial_position, destination, graph, adj):
         Otherwise, return None.
 
     """
-    
-    frontier = {} #PriorityQueue
-    frontier.insert(0, 0)
-    came_from = {}
-    cost_so_far = {}
-    came_from[start] = None
-    cost_so_far[start] = 0
+    """ queue = [] # Just a plain list
 
+heappush(queue, (2, 'a')) # enqueuing some pairs
+
+heappush(queue, (42,'b'))
+
+heappush(queue, (1, 'c'))
+
+p1, x1 =  # dequeuing some pairs
+
+p2, x2 = heappop(queue)
+
+p3, x3 = heappop(queue)
+
+assert [x1, x2, x3] == ['c','a','b']
+
+assert [p1, p2, p3] == [1, 2, 42]
+
+assert queue == [] """
+    frontier = [] # our queue which we interpret  as a priority queue
+    heappush(frontier, (initial_position[2],initial_position ) #putting our instial position with its cost
+    came_from = {} # where we have been
+    cost_so_far = {} #the cost so far
+    came_from[0] = 0 #just setting up the intial destination
+    cost_so_far[0] = 0 #where were starting
+    i = 0;
     while not frontier.empty():
-        current = frontier.get()
-
-        if current == goal:
+        current = heappop(frontier) # gets lowest priority
+        
+        if current == destination: # if it equals our goal destnation
             break
-   
-    for next in graph.neighbors(current):
-        new_cost = cost_so_far[current] + graph.cost(current, next)
-      if next not in cost_so_far or new_cost < cost_so_far[next]:
-         cost_so_far[next] = new_cost
-         priority = new_cost + heuristic(goal, next)
-         frontier.put(next, priority)
-         came_from[next] = current
+        if i not equals 0:
+            adj = navigation_edges()# reset which variables were going to look at
+     #adj = navigation_edges(
+        for next in adj: # for all elements in adjacent to it
+            new_cost = next[1] + current[1] # adding our current cost to our next element
+            if next not in cost_so_far or new_cost < cost_so_far[i]:
+                cost_so_far[i] = new_cost
+                priority = new_cost
+                frontier.put(next, priority)
+                came_from[next] = current
 
     
     pass

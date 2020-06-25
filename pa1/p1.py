@@ -13,68 +13,7 @@ def cost_calculator(cell1, cell2, level):
 def heuristic(a, b):
 
     return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
-def dijkstras_shortest_patha(initial_position, destination, graph, adj):
-    """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
-    Args:
-        initial_position: The initial cell from which the path extends.
-        destination: The end location for the path.
-        graph: A loaded level, containing walls, spaces, and waypoints.
-        adj: An adjacency function returning cells adjacent to a given cell as well as their respective edge costs.
-
-    Returns:
-        If a path exits, return a list containing all cells from initial_position to destination.
-        Otherwise, return None.
-
-    """
-    frontier = [] # our queue which we interpret  as a priority queue
-    heappush(frontier, (0,initial_position) ) 
-    came_from = {} # where we have been
-    cost_so_far = {} #the cost so far
-    came_from[initial_position] = 0 #just setting up the intial destination
-    cost_so_far[initial_position] = 0 #where were starting
-    done = 0
-    while frontier:
-        current = heappop(frontier) # gets lowest priority
-        if current[1] == destination: # if it equals our goal destnation
-            done = 1
-            break
-        adj = navigation_edges(graph,current[1])# reset which variables were going to look at
-     #adj = navigation_edges(
-
-        for next in adj: # for all elements in adjacent to it
-           new_cost = next[1] +cost_so_far[current[1]]
-           if next not in cost_so_far or new_cost < cost_so_far[next[0]]:
-                cost_so_far[next[0]] = new_cost
-                came_from[next[0]] = current[1]
-                priority = cost_so_far[next[0]]
-                heappush(frontier,(priority,next[0]))
-
-        """if next in cost_so_far:
-                if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
-                    cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
-                    came_from[next[0]] = current[1]
-            else:
-                cost_so_far[next[0]] =  next[1] +cost_so_far[current[1]]
-                came_from[next[0]] = current[1]
-                priority = cost_so_far[next[0]]
-                heappush(frontier,(priority,next[0]))"""
-    if done == 1:
-        i =0
-        goback = []
-        current = destination
-        """for a in cost_so_far:
-            print(a)    """
-        while i != 50:
-            i = i+1
-            goback.insert(0,current)
-            print(current)
-            current = came_from[current]
-        print("we done")
-        return goback
-    print("we done fail")
-    return None 
-    pass
 def dijkstras_shortest_path(initial_position, destination, graph, adj):
     """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
@@ -237,7 +176,7 @@ def test_route(filename, src_waypoint, dst_waypoint):
     dst = level['waypoints'][dst_waypoint]
 
     # Search for and display the path from src to dst.
-    path = dijkstras_shortest_patha(src, dst, level, navigation_edges)
+    path = dijkstras_shortest_path(src, dst, level, navigation_edges)
     if path:
         show_level(level, path)
     else:

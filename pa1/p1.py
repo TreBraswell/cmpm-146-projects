@@ -51,7 +51,7 @@ assert queue == [] """
         if current == destination: # if it equals our goal destnation
             break
         if i not equals 0:
-            adj = navigation_edges()# reset which variables were going to look at
+            adj = navigation_edges(graph,current)# reset which variables were going to look at
      #adj = navigation_edges(
         for next in adj: # for all elements in adjacent to it
             new_cost = next[1] + current[1] # adding our current cost to our next element

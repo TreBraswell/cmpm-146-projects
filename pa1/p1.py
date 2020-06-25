@@ -63,7 +63,7 @@ assert queue == [] """
      #adj = navigation_edges(
 
         for next in adj: # for all elements in adjacent to it
-            if next in cost_so_far:
+            if next[0] in cost_so_far:
                 if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
                     cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
                     came_from[next[0]] = current[1]
@@ -79,7 +79,7 @@ assert queue == [] """
         current = destination
 
         for a in came_from:
-            print(a)    
+            print(a, came_from[a])
         while current != initial_position:
             goback.insert(0,current)
             print(current)
@@ -118,7 +118,7 @@ def dijkstras_shortest_path_to_all(initial_position, graph, adj):
 
         for next in adj: # for all elements in adjacent to it
            
-            if next in cost_so_far:
+            if next[0] in cost_so_far:
                 if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
                     cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
             else:

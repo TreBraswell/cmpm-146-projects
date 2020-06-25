@@ -2,7 +2,9 @@ from p1_support import load_level, show_level, save_level_costs
 from math import inf, sqrt
 from heapq import heappop, heappush
 
-
+def heuristic(a, b):
+   # Manhattan distance on a square grid
+   return abs(a.x - b.x) + abs(a.y - b.y)
 def dijkstras_shortest_path(initial_position, destination, graph, adj):
     """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
@@ -17,6 +19,29 @@ def dijkstras_shortest_path(initial_position, destination, graph, adj):
         Otherwise, return None.
 
     """
+    
+    frontier = {} #PriorityQueue
+    frontier.insert(0, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+
+    while not frontier.empty():
+        current = frontier.get()
+
+        if current == goal:
+            break
+   
+    for next in graph.neighbors(current):
+        new_cost = cost_so_far[current] + graph.cost(current, next)
+      if next not in cost_so_far or new_cost < cost_so_far[next]:
+         cost_so_far[next] = new_cost
+         priority = new_cost + heuristic(goal, next)
+         frontier.put(next, priority)
+         came_from[next] = current
+
+    
     pass
 
 
@@ -30,6 +55,29 @@ def dijkstras_shortest_path_to_all(initial_position, graph, adj):
 
     Returns:
         A dictionary, mapping destination cells to the cost of a path from the initial_position.
+    """
+    # a* star algorithm
+    """
+    frontier = PriorityQueue()
+    frontier.put(start, 0)
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+
+while not frontier.empty():
+   current = frontier.get()
+
+   if current == goal:
+      break
+   
+   for next in graph.neighbors(current):
+      new_cost = cost_so_far[current] + graph.cost(current, next)
+      if next not in cost_so_far or new_cost < cost_so_far[next]:
+         cost_so_far[next] = new_cost
+         priority = new_cost
+         frontier.put(next, priority)
+         came_from[next] = current
     """
     pass
 

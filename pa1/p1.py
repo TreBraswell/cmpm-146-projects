@@ -14,8 +14,7 @@ def cost_calculator(cell1, cell2, level):
 def heuristic(a, b):
 
     return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
-
-def dijkstras_shortest_path(initial_position, destination, graph, adj):
+def dijkstras_shortest_path_a_star(initial_position, destination, graph, adj):
     """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
     Args:
@@ -76,15 +75,82 @@ assert queue == [] """
     if done == 1:
 
         goback = []
-        print(destination)
         current = destination
         while current != 0:
             goback.insert(0,current)
-            print(current)
+
             current = came_from[current]
-        print("we done")
         return goback
-    print("we done fail")
+    return None 
+    pass
+
+def dijkstras_shortest_path(initial_position, destination, graph, adj):
+    """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
+
+    Args:
+        initial_position: The initial cell from which the path extends.
+        destination: The end location for the path.
+        graph: A loaded level, containing walls, spaces, and waypoints.
+        adj: An adjacency function returning cells adjacent to a given cell as well as their respective edge costs.
+
+    Returns:
+        If a path exits, return a list containing all cells from initial_position to destination.
+        Otherwise, return None.
+
+    """
+    """ queue = [] # Just a plain list
+
+heappush(queue, (2, 'a')) # enqueuing some pairs
+
+heappush(queue, (42,'b'))
+
+heappush(queue, (1, 'c'))
+
+p1, x1 =  # dequeuing some pairs
+
+p2, x2 = heappop(queue)
+
+p3, x3 = heappop(queue)
+
+assert [x1, x2, x3] == ['c','a','b']
+
+assert [p1, p2, p3] == [1, 2, 42]
+
+assert queue == [] """
+    frontier = [] # our queue which we interpret  as a priority queue
+    heappush(frontier, (0,initial_position) ) #putting our instial position with its cost
+    came_from = {} # where we have been
+    cost_so_far = {} #the cost so far
+    came_from[initial_position] = 0 #just setting up the intial destination
+    cost_so_far[initial_position] = 0 #where were starting
+    done = 0
+    while frontier:
+        current = heappop(frontier) # gets lowest priority
+        if current[1] == destination: # if it equals our goal destnation
+            done = 1
+            break
+        adjacents = adj(graph,current[1])# reset which variables were going to look at
+     #adj = navigation_edges(
+
+        for next in adjacents: # for all elements in adjacent to it
+            if next[0] in cost_so_far.keys():
+                if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
+                    cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
+                    came_from[next[0]] = current[1]
+            else:
+                cost_so_far[next[0]] =  next[1] +cost_so_far[current[1]]
+                came_from[next[0]] = current[1]
+                priority = cost_so_far[next[0]]
+                heappush(frontier,(priority,next[0]))
+    if done == 1:
+
+        goback = []
+        current = destination
+        while current != 0:
+            goback.insert(0,current)
+            #print("test")
+            current = came_from[current]
+        return goback
     return None 
     pass
 
@@ -217,6 +283,8 @@ if __name__ == '__main__':
 
 f = open("test_maze_path.txt", "w+")
 level = load_level("test_maze.txt")
+# we also did the path with a* star 
+#dijkstras_shortest_path_a_star(level['waypoints']['a'], level['waypoints']['d'], level, navigation_edges)
 the_path = dijkstras_shortest_path(level['waypoints']['a'], level['waypoints']['d'], level, navigation_edges)
 path = []
 for coord in the_path:

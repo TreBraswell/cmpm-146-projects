@@ -1,6 +1,7 @@
 from p1_support import load_level, show_level, save_level_costs
 from math import inf, sqrt
 from heapq import heappop, heappush
+import csv
 
 
 def cost_calculator(cell1, cell2, level):
@@ -59,11 +60,11 @@ assert queue == [] """
         if current[1] == destination: # if it equals our goal destnation
             done = 1
             break
-        adj = navigation_edges(graph,current[1])# reset which variables were going to look at
+        adjacents = adj(graph,current[1])# reset which variables were going to look at
      #adj = navigation_edges(
 
-        for next in adj: # for all elements in adjacent to it
-            if next[0] in cost_so_far:
+        for next in adjacents: # for all elements in adjacent to it
+            if next[0] in cost_so_far.keys():
                 if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
                     cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
                     came_from[next[0]] = current[1]
@@ -77,15 +78,10 @@ assert queue == [] """
         goback = []
         print(destination)
         current = destination
-
-        for a in came_from:
-            print(a, came_from[a])
-        while current != initial_position:
+        while current != 0:
             goback.insert(0,current)
             print(current)
-            print("infinite loop on line 82")
             current = came_from[current]
-        goback.insert(0,initial_position)
         print("we done")
         return goback
     print("we done fail")
@@ -113,12 +109,12 @@ def dijkstras_shortest_path_to_all(initial_position, graph, adj):
     while frontier:
         current = heappop(frontier) # gets lowest priority
         
-        adj = navigation_edges(graph,current[1])# reset which variables were going to look at
+        adjacents = adj(graph,current[1])# reset which variables were going to look at
      #adj = navigation_edges(
 
-        for next in adj: # for all elements in adjacent to it
+        for next in adjacents: # for all elements in adjacent to it
            
-            if next[0] in cost_so_far:
+            if next[0] in cost_so_far.keys():
                 if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
                     cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
             else:
@@ -206,7 +202,7 @@ def cost_to_all_cells(filename, src_waypoint, output_filename):
     src = level['waypoints'][src_waypoint]
     
     # Calculate the cost to all reachable cells from src and save to a csv file.
-    costs_to_all_cells = dijkstras_shortest_path_to_all(src, level, navigation_edges())
+    costs_to_all_cells = dijkstras_shortest_path_to_all(src, level, navigation_edges)
     save_level_costs(level, costs_to_all_cells, output_filename)
 
 
@@ -219,5 +215,53 @@ if __name__ == '__main__':
     # Use this function to calculate the cost to all reachable cells from an origin point.
     cost_to_all_cells(filename, src_waypoint, 'my_costs.csv')
 
+f = open("test_maze_path.txt", "w+")
+level = load_level("test_maze.txt")
+the_path = dijkstras_shortest_path(level['waypoints']['a'], level['waypoints']['d'], level, navigation_edges)
+path = []
+for coord in the_path:
+    path.append(coord)
 
+xs, ys = zip(*(list(level['spaces'].keys()) + list(level['walls'])))
+x_lo, x_hi = min(xs), max(xs)
+y_lo, y_hi = min(ys), max(ys)
 
+path_cells = set(path)
+
+chars = []
+inverted_waypoints = {point: char for char, point in level['waypoints'].items()}
+
+for j in range(y_lo, y_hi + 1):
+    for i in range(x_lo, x_hi + 1):
+
+        cell = (i, j)
+        if cell in path_cells:
+            chars.append('*')
+        elif cell in level['walls']:
+            chars.append('X')
+        elif cell in inverted_waypoints:
+            chars.append(inverted_waypoints[cell])
+        elif cell in level['spaces']:
+            chars.append(str(int(level['spaces'][cell])))
+        else:
+            chars.append(' ')
+
+    chars.append('\n')
+
+f.write(''.join(chars))
+
+f.close()
+
+with open("my_maze_costs.csv", 'w', newline='') as fj:
+    lev = load_level("my_maze.txt")
+    all_costs = dijkstras_shortest_path_to_all(lev['waypoints']['a'], lev, navigation_edges)
+    mywriter = csv.writer(fj)
+    for i in range(15):
+        rower = []
+        for j in range(27):
+            if (j,i) in all_costs:
+                rower.append(str(all_costs[(j,i)]))
+            else:
+                rower.append("None")
+        mywriter.writerow(rower)
+fj.close()

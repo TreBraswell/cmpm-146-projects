@@ -82,7 +82,6 @@ def find_path (source_point, destination_point, mesh):
 
     return None
 
-
     path = []
     boxes = {}
 

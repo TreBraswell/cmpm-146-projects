@@ -54,6 +54,46 @@ def find_path (source_point, destination_point, mesh):
         return goback
     return None     
     pass    """
+       """# The priority queue
+    queue = [(0, initial_position)]
+
+    # The dictionary that will be returned with the costs
+    distances = {}
+    distances[initial_position] = 0
+
+    # The dictionary that will store the backpointers
+    backpointers = {}
+    backpointers[initial_position] = None
+
+    while queue:
+        current_dist, current_node = heappop(queue)
+
+        # Check if current node is the destination
+        if current_node == destination:
+
+            # List containing all cells from initial_position to destination
+            path = [current_node]
+
+            # Go backwards from destination until the source using backpointers
+            # and add all the nodes in the shortest path into a list
+            current_back_node = backpointers[current_node]
+            while current_back_node is not None:
+                path.append(current_back_node)
+                current_back_node = backpointers[current_back_node]
+
+            return path[::-1]
+
+        # Calculate cost from current note to all the adjacent ones
+        for adj_node, adj_node_cost in adj(graph, current_node):
+            pathcost = current_dist + adj_node_cost
+
+            # If the cost is new
+            if adj_node not in distances or pathcost < distances[adj_node]:
+                distances[adj_node] = pathcost
+                backpointers[adj_node] = current_node
+                heappush(queue, (pathcost, adj_node))
+
+    return None    """
     path = []
     boxes = {}
 

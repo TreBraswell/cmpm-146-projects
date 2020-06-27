@@ -55,11 +55,11 @@ def find_path (source_point, destination_point, mesh):
     return None     
     pass    """
 
-    frontier = [(initial_position, 0)]
+    frontier = [(source_point, 0)]
     previous = {}
     move_cost = {}
-    previous[initial_position] = None
-    move_cost[initial_position] = 0
+    previous[source_point] = None
+    move_cost[source_point] = 0
 
     while frontier:
         current_pos, current_cost = heappop(frontier)
@@ -72,7 +72,7 @@ def find_path (source_point, destination_point, mesh):
                 current_path = previous[current_path]
             return path
 
-        for next_node, next_cost in adj(graph, current_pos):
+        for next_node, next_cost in adj(move_cost):
             new_cost = move_cost[current_pos] + next_cost
             if next_node not in move_cost or new_cost < move_cost[next_node]:
                 move_cost[next_node] = new_cost

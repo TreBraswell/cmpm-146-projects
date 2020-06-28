@@ -56,31 +56,35 @@ def find_path (source_point, destination_point, mesh):
     pass    """
 
     frontier = [(source_point, 0)]
+    visited = []
     previous = {}
-    move_cost = {}
+    distance = {}
     previous[source_point] = None
-    move_cost[source_point] = 0
+    distance[source_point] = 0
 
     while frontier:
-        current_pos, current_cost = heappop(frontier)
+        current_box = heappop(frontier)
 
-        if current_pos == destination:
+        if current_box == destination_point:
             path = []
-            current_path = destination
+            current_path = destination_point
             while current_path != None:
                 path.insert(0, current_path)
                 current_path = previous[current_path]
             return path
 
-        for next_node, next_cost in adj(move_cost):
-            new_cost = move_cost[current_pos] + next_cost
-            if next_node not in move_cost or new_cost < move_cost[next_node]:
-                move_cost[next_node] = new_cost
+        visited.append[current_box]
+
+        for adjacent_box in mesh['adj'][current_box]:
+            if adjacent_box in visited:
+                continue
+            else:
+                
+                """move_cost[next_node] = new_cost
                 temp_cost = new_cost
                 heappush(frontier, (next_node, temp_cost))
-                previous[next_node] = current_pos
+                previous[next_node] = current_pos"""
 
-    return None
 
     path = []
     boxes = {}

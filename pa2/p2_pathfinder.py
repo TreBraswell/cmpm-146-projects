@@ -94,9 +94,8 @@ def find_path (source_point, destination_point, mesh):
 
     # The priority queue
     queue = []
-    print(sourcebox)
+
     heappush(queue,(0,sourcebox))
-    print(queue)
     # The dictionary that will be returned with the costs
     distances = {}
     distances[sourcebox] = 0
@@ -109,7 +108,7 @@ def find_path (source_point, destination_point, mesh):
         current_node = heappop(queue)
 
         # Check if current node is the destination
-        if current_node == destinationbox:
+        if current_node[1] == destinationbox:
 
             # List containing all cells from initial_position to destination
             #path = [current_node]
@@ -121,12 +120,10 @@ def find_path (source_point, destination_point, mesh):
             #while current_back_node is not None:
              #   print(current_back_node)
               #  path.append(current_back_node)
-              #  current_back_node = backpointers[current_back_node]
+               current_back_node = backpointers[current_back_node]
 
-            return path[::-1]
-        print("test \n \n")
+            
         adjacents = navigation_edges(adj[current_node[1]],current_node[1])
-        print(adjacents)
         # Calculate cost from current note to all the adjacent ones
         for next in adjacents :
 

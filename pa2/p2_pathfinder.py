@@ -1,17 +1,22 @@
 from heapq import heappop, heappush
 from math import inf, sqrt
-def pythag(boxes):
+def dimens(boxes):
     boxpoints = {}
     for current in boxes:
         x1 = current[2]
         x2 = current[3]
         y1 = current[0]
         y2 = current[1]
+        print("x1: ", x1, "\n x2: ", x2, "\n y1: ", y1, "\n y2: ", y2)
         width = x2 -x1
         height = y2 - y1
         boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
     return boxpoints 
     
+def pythag(val, point):
+	diagonal = sqrt((val[0] - point[0]) ** 2 + (val[1] - point[1]) ** 2) * 0.5
+	return diagonal
+
 def navigation_edges(level, cell):
     """ Provides a list of adjacent cells and their respective costs from the given cell.
 
@@ -146,27 +151,31 @@ def find_path (source_point, destination_point, mesh):
         endlist = []
         goback = []
         current =  destinationbox
+        point = source_point
         while current != None:
             goback.insert(0,current)
-            print(current)
+            #print("current box: ", current)
             current = backpointers[current]
         
-        finaldistance = pythag(goback)   
-        point = source_point
+        finaldistance = dimens(goback)   
         endlist.append(point)
+        #print("goback contains: ", goback)
         for key in goback:
             currdistance = 0
             maxdistance = 0
             largestpoint = point
             for val  in finaldistance[key]:
-                currdistance = sqrt((val[0] - point[0]) ** 2 + (val[1] - point[1]) ** 2) * 0.5
+                currdistance = pythag(val, point)
+                print("currdistance: ", currdistance)
                 if currdistance < maxdistance or maxdistance == 0:
                     maxdistance = currdistance
+                    print("max distance updated: ", maxdistance)
                     largestpoint = val
+                    print("largestpoint: ", largestpoint)
             point = largestpoint 
             endlist.append(point)
         
-        print(endlist)
+        print("endlist: ", endlist)
         return endlist, goback
     return None 
     # path = []

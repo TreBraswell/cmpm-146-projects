@@ -33,10 +33,10 @@ def find_path (source_point, destination_point, mesh):
 	print("destination_point: ", dx, ", ", dy)
 
 	for key in boxes:
-		x1 = key[3]
-		x2 = key[2]
-		y1 = key[1]
-		y2 = key[0]
+		x1 = key[2]
+		x2 = key[3]
+		y1 = key[0]
+		y2 = key[1]
 		
 		#if x2 > 900:
 			#print("yes")

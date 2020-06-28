@@ -19,7 +19,12 @@ def find_path (source_point, destination_point, mesh):
         A path (list of points) from source_point to destination_point if exists
         A list of boxes explored by the algorithm
     """
-    
+    boxes = mesh["boxes"]
+    adj = mesh["adj"]
+    #key[0] = x1 key[1] = y1 key[2] = x2 key[3] = y2
+    for key in boxes:
+        if key[0] && 
+    """
     frontier = [(source_point, 0)]
     visited = []
     previous = {}
@@ -54,7 +59,7 @@ def find_path (source_point, destination_point, mesh):
                 previous[next_node] = current_pos"""
 
 
-    path = []
-    boxes = {}
+    # path = []
+    #boxes = {}
 
-    return path, boxes.keys()
+    #return path, boxes.keys()

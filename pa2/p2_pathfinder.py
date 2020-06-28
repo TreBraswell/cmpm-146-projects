@@ -1,3 +1,31 @@
+from heapq import heappop, heappush
+from math import inf, sqrt
+def navigation_edges(level, cell):
+    """ Provides a list of adjacent cells and their respective costs from the given cell.
+
+    Args:
+        level: adjacent cells to cell
+        cell: A target location.
+
+    Returns:
+        A list of costs and adjacent boxes
+    """
+
+
+    edges = []
+    # Visit all adjacent cells
+    for box in level:
+            
+        #########
+        #NOTE : i used the lower number ie the start of the box
+        #########
+        # calculate the distance from cell to next_cell
+        dist = sqrt((box[2] - cell[2]) ** 2 + (box[0] - cell[0]) ** 2) * 0.5
+        # calculate cost and add it to the dict of adjacent cells
+        edges.append((dist,box))
+    return edges
+    pass
+
 def heuristic(a, b):
 
     return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
@@ -17,72 +45,102 @@ def find_path (source_point, destination_point, mesh):
         A path (list of points) from source_point to destination_point if exists
         A list of boxes explored by the algorithm
     """
-        """
-      frontier = [] # our queue which we interpret  as a priority queue
-    heappush(frontier, (heuristic(initial_position,destination),initial_position) ) #putting our instial position with its cost
-    came_from = {} # where we have been
-    cost_so_far = {} #the cost so far
-    came_from[initial_position] = 0 #just setting up the intial destination
-    cost_so_far[initial_position] = 0 #where were starting
-    done = 0
-    while frontier:
-        current = heappop(frontier) # gets lowest priority
-        if current[1] == destination: # if it equals our goal destnation
-            done = 1
-            break
-        adjacents = adj(graph,current[1])# reset which variables were going to look at
-     #adj = navigation_edges(
+    boxes = mesh["boxes"]
+    adj = mesh["adj"]
+    result = []
+    #key[0] = x1 key[1] = y1 key[2] = x2 key[3] = y2
+    
+    sx = source_point[1]
+    sy = source_point[0]
+    dx = destination_point[1]
+    dy = destination_point[0]
 
-        for next in adjacents: # for all elements in adjacent to it
-            if next[0] in cost_so_far.keys():
-                if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
-                    cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
-                    came_from[next[0]] = current[1]
-            else:
-                cost_so_far[next[0]] =  next[1] +cost_so_far[current[1]]
-                came_from[next[0]] = current[1]
-                priority = cost_so_far[next[0]] + heuristic(next[0],destination)
-                heappush(frontier,(priority,next[0]))
-    if done == 1:
+    print("source_point: ", sx, ", ", sy)
+    print("destination_point: ", dx, ", ", dy)
 
-        goback = []
-        current = destination
-        while current != 0:
-            goback.insert(0,current)
+    for key in boxes:
+        x1 = key[2]
+        x2 = key[3]
+        y1 = key[0]
+        y2 = key[1]
+        
+        #if x2 > 900:
+            #print("yes")
+        #source box
+        if sx >= x1 and sx < x2:
+            if sy >= y1 and sy < y2:
+                sourcebox = key
+                print("found source box: ", key, "\n")
+                print("x1: ", x1, "\n")
+                print("y1: ", y1, "\n")
+                print("x2: ", x2, "\n")
+                print("y2: ", y2, "\n")
+                #result.append(key)
 
-            current = came_from[current]
-        return goback
-    return None     
-    pass    """
+        #dest box
+        if dx >= x1 and dx < x2:
+            if dy >= y1 and dy < y2:
+                destinationbox = key
+                print("found destination box: ", key, "\n" )
+                print("x1: ", x1, "\n")
+                print("y1: ", y1, "\n")
+                print("x2: ", x2, "\n")
+                print("y2: ", y2, "\n")
+                #result.append(key)
 
-    frontier = [(initial_position, 0)]
-    previous = {}
-    move_cost = {}
-    previous[initial_position] = None
-    move_cost[initial_position] = 0
+    #print("found boxes: ", result)
+     
 
-    while frontier:
-        current_pos, current_cost = heappop(frontier)
+    # The priority queue
+    queue = []
+    print(sourcebox)
+    heappush(queue,(0,sourcebox))
 
-        if current_pos == destination:
-            path = []
-            current_path = destination
-            while current_path != None:
-                path.insert(0, current_path)
-                current_path = previous[current_path]
-            return path
+    # The dictionary that will be returned with the costs
+    distances = {}
+    distances[sourcebox] = 0
 
-        for next_node, next_cost in adj(graph, current_pos):
-            new_cost = move_cost[current_pos] + next_cost
-            if next_node not in move_cost or new_cost < move_cost[next_node]:
-                move_cost[next_node] = new_cost
-                temp_cost = new_cost
-                heappush(frontier, (next_node, temp_cost))
-                previous[next_node] = current_pos
+    # The dictionary that will store the backpointers
+    backpointers = {}
+    backpointers[sourcebox] = None
 
-    return None
+    while queue:
+        current_dist, current_node = heappop(queue)
 
-    path = []
-    boxes = {}
+        # Check if current node is the destination
+        if current_node == destinationbox:
 
-    return path, boxes.keys()
+            # List containing all cells from initial_position to destination
+            #path = [current_node]
+            for boxf in backpointers:
+                print(boxf)
+            # Go backwards from destination until the source using backpointers
+            # and add all the nodes in the shortest path into a list
+            #current_back_node = backpointers[current_node[1]]
+            #while current_back_node is not None:
+             #   print(current_back_node)
+              #  path.append(current_back_node)
+              #  current_back_node = backpointers[current_back_node]
+
+            return path[::-1]
+
+        # Calculate cost from current note to all the adjacent ones
+        for adj_node, adj_node_cost in navigation_edges(adj[current_node],current_node):
+            print(current_dist)
+            print(adj_node_cost)
+            pathcost = current_dist[0] + adj_node_cost[0] # their is going to some errors because i am just adding them all together
+
+            # If the cost is new
+            ######
+            #NOTE: may have to check that i am checking distances correctly
+            ######
+            if adj_node[1] not in distances or pathcost < distances[adj_node[1]]:
+                distances[adj_node[1]] = pathcost
+                backpointers[adj_node[1]] = current_node[0]
+                heappush(queue, (pathcost, adj_node[1]))
+
+
+    # path = []
+    #boxes = {}
+
+    #return path, boxes.keys()

@@ -1,5 +1,17 @@
 from heapq import heappop, heappush
 from math import inf, sqrt
+def pythag(boxes):
+    boxpoints = {}
+    for current in boxes:
+        x1 = current[2]
+        x2 = current[3]
+        y1 = current[0]
+        y2 = current[1]
+        width = x2 -x1
+        height = y2 - y1
+        boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
+    return boxpoints 
+    
 def navigation_edges(level, cell):
     """ Provides a list of adjacent cells and their respective costs from the given cell.
 
@@ -71,22 +83,14 @@ def find_path (source_point, destination_point, mesh):
         if sx >= x1 and sx < x2:
             if sy >= y1 and sy < y2:
                 sourcebox = key
-                print("found source box: ", key, "\n")
-                print("x1: ", x1, "\n")
-                print("y1: ", y1, "\n")
-                print("x2: ", x2, "\n")
-                print("y2: ", y2, "\n")
+            
                 #result.append(key)
 
         #dest box
         if dx >= x1 and dx < x2:
             if dy >= y1 and dy < y2:
                 destinationbox = key
-                print("found destination box: ", key, "\n" )
-                print("x1: ", x1, "\n")
-                print("y1: ", y1, "\n")
-                print("x2: ", x2, "\n")
-                print("y2: ", y2, "\n")
+                
                 #result.append(key)
 
     #print("found boxes: ", result)
@@ -109,18 +113,18 @@ def find_path (source_point, destination_point, mesh):
 
         # Check if current node is the destination
         if current_node[1] == destinationbox:
-
+            done = 1
+            break
             # List containing all cells from initial_position to destination
             #path = [current_node]
-            for boxf in backpointers:
-                print(boxf)
+
             # Go backwards from destination until the source using backpointers
             # and add all the nodes in the shortest path into a list
             #current_back_node = backpointers[current_node[1]]
             #while current_back_node is not None:
              #   print(current_back_node)
               #  path.append(current_back_node)
-               current_back_node = backpointers[current_back_node]
+              #  current_back_node = backpointers[current_back_node]
 
             
         adjacents = navigation_edges(adj[current_node[1]],current_node[1])
@@ -138,7 +142,33 @@ def find_path (source_point, destination_point, mesh):
                 backpointers[next[1]] = current_node[1]
                 heappush(queue, (pathcost, next[1]))
 
-
+    if done == 1:
+        endlist = []
+        goback = []
+        current =  destinationbox
+        while current != None:
+            goback.insert(0,current)
+            print(current)
+            current = backpointers[current]
+        
+        finaldistance = pythag(goback)   
+        point = source_point
+        endlist.append(point)
+        for key in goback:
+            currdistance = 0
+            maxdistance = 0
+            largestpoint = point
+            for val  in finaldistance[key]:
+                currdistance = sqrt((val[0] - point[0]) ** 2 + (val[1] - point[1]) ** 2) * 0.5
+                if currdistance < maxdistance or maxdistance == 0:
+                    maxdistance = currdistance
+                    largestpoint = val
+            point = largestpoint 
+            endlist.append(point)
+        
+        print(endlist)
+        return endlist, goback
+    return None 
     # path = []
     #boxes = {}
 

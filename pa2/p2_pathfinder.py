@@ -21,8 +21,9 @@ def navigation_edges(level, cell):
         #########
         # calculate the distance from cell to next_cell
         dist = sqrt((box[2] - cell[2]) ** 2 + (box[0] - cell[0]) ** 2) * 0.5
+        test = (dist,box)
         # calculate cost and add it to the dict of adjacent cells
-        edges.append((dist,box))
+        edges.append(test)
     return edges
     pass
 
@@ -95,7 +96,7 @@ def find_path (source_point, destination_point, mesh):
     queue = []
     print(sourcebox)
     heappush(queue,(0,sourcebox))
-
+    print(queue)
     # The dictionary that will be returned with the costs
     distances = {}
     distances[sourcebox] = 0
@@ -105,7 +106,7 @@ def find_path (source_point, destination_point, mesh):
     backpointers[sourcebox] = None
 
     while queue:
-        current_dist, current_node = heappop(queue)
+        current_node = heappop(queue)
 
         # Check if current node is the destination
         if current_node == destinationbox:
@@ -123,21 +124,22 @@ def find_path (source_point, destination_point, mesh):
               #  current_back_node = backpointers[current_back_node]
 
             return path[::-1]
-
+        print("test \n \n")
+        adjacents = navigation_edges(adj[current_node[1]],current_node[1])
+        print(adjacents)
         # Calculate cost from current note to all the adjacent ones
-        for adj_node, adj_node_cost in navigation_edges(adj[current_node],current_node):
-            print(current_dist)
-            print(adj_node_cost)
-            pathcost = current_dist[0] + adj_node_cost[0] # their is going to some errors because i am just adding them all together
+        for next in adjacents :
+
+            pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
 
             # If the cost is new
             ######
             #NOTE: may have to check that i am checking distances correctly
             ######
-            if adj_node[1] not in distances or pathcost < distances[adj_node[1]]:
-                distances[adj_node[1]] = pathcost
-                backpointers[adj_node[1]] = current_node[0]
-                heappush(queue, (pathcost, adj_node[1]))
+            if next[1] not in distances or pathcost < distances[next[1]]:
+                distances[next[1]] = pathcost
+                backpointers[next[1]] = current_node[1]
+                heappush(queue, (pathcost, next[1]))
 
 
     # path = []

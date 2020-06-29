@@ -175,8 +175,15 @@ def find_path (source_point, destination_point, mesh):
         endlist.append(source_point)
         #print("this is :",source_point)
         #print("goback contains: ", goback)
-
+        i = 0
+        prevkey = goback[0]
+        box1mn = 0
+        box1mx = 0
         for key in goback:
+            i = i+1
+            if i ==1:
+                prevkey = key
+                continue 
             currdistance = 0
             maxdistance = 0
             largestpoint = point
@@ -184,11 +191,13 @@ def find_path (source_point, destination_point, mesh):
                 currdistance = pythag(val, destination_point)
                 #print("currdistance: ", currdistance)
                 if currdistance < maxdistance or maxdistance == 0:
+                    
                     maxdistance = currdistance
                     #print("max distance updated: ", maxdistance)
                     largestpoint = val
                     #print("largestpoint: ", largestpoint)
             point = largestpoint
+            prevkey = key
             print("this is point : ", point) 
             endlist.append(point)
 

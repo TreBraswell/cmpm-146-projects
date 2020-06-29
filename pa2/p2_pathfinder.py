@@ -1,4 +1,75 @@
 from heapq import heappop, heappush
+<<<<<<< Updated upstream
+=======
+from math import inf, sqrt
+def reverse(obj):
+	temp = []
+	for key in obj:
+		if key == obj[0] or key == obj[len(obj)-1]:
+			temp.append(key)
+			continue
+		temp.append((key[1],key[0]))
+	return temp
+
+def dimens(boxes):
+	boxpoints = {}
+	for current in boxes:
+		x1 = current[2]
+		x2 = current[3]
+		y1 = current[0]
+		y2 = current[1]
+		#print("x1: ", x1, "\n x2: ", x2, "\n y1: ", y1, "\n y2: ", y2)
+		width = x2 -x1
+		height = y2 - y1
+		boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
+	return boxpoints 
+
+def get_detail_point(starting_points, next_box):
+	x, y = starting_points
+	next_x1 = next_box[2]
+	next_x2 = next_box[3]
+	next_y1 = next_box[0]
+	next_y2 = next_box[1]
+
+	detail_point = (min(next_x2, max(next_x1, x)), min(next_y2, max(next_y1, y)))
+	return detail_point
+	
+def pythag(coord1, coord2):
+	x1 = coord1[0]
+	x2 = coord2[0]
+	y1 = coord1[1]
+	y2 = coord2[1]
+
+	diagonal = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2) * 0.5
+	return diagonal
+
+def navigation_edges(level, cell):
+	""" Provides a list of adjacent cells and their respective costs from the given cell.
+
+	Args:
+		level: adjacent cells to cell
+		cell: A target location.
+
+	Returns:
+		A list of costs and adjacent boxes
+	"""
+
+
+	edges = []
+	# Visit all adjacent cells
+	for box in level:
+			
+		#########
+		#NOTE : i used the lower number ie the start of the box
+		#########
+		# calculate the distance from cell to next_cell
+		dist = sqrt((box[2] - cell[2]) ** 2 + (box[0] - cell[0]) ** 2) * 0.5
+		test = (dist,box)
+		# calculate cost and add it to the dict of adjacent cells
+		edges.append(test)
+	return edges
+	pass
+>>>>>>> Stashed changes
 
 def heuristic(a, b):
 
@@ -43,25 +114,36 @@ def find_path (source_point, destination_point, mesh):
 		#source box
 		if sx >= x1 and sx < x2:
 			if sy >= y1 and sy < y2:
+<<<<<<< Updated upstream
 				print("found source box: ", key, "\n")
 				print("x1: ", x1, "\n")
 				print("y1: ", y1, "\n")
 				print("x2: ", x2, "\n")
 				print("y2: ", y2, "\n")
+=======
+				sourcebox = key
+			
+>>>>>>> Stashed changes
 				#result.append(key)
 
 		#dest box
 		if dx >= x1 and dx < x2:
 			if dy >= y1 and dy < y2:
+<<<<<<< Updated upstream
 				print("found destination box: ", key, "\n" )
 				print("x1: ", x1, "\n")
 				print("y1: ", y1, "\n")
 				print("x2: ", x2, "\n")
 				print("y2: ", y2, "\n")
+=======
+				destinationbox = key
+				
+>>>>>>> Stashed changes
 				#result.append(key)
 
 	#print("found boxes: ", result)
 	 
+<<<<<<< Updated upstream
 	"""
 	frontier = [(source_point, 0)]
 	visited = []
@@ -97,6 +179,96 @@ def find_path (source_point, destination_point, mesh):
 				previous[next_node] = current_pos"""
 
 
+=======
+
+	# The priority queue
+	queue = []
+
+	heappush(queue,(0,sourcebox))
+	# The dictionary that will be returned with the costs
+	distances = {}
+	distances[sourcebox] = 0
+
+	# The dictionary that will store the backpointers
+	backpointers = {}
+	backpointers[sourcebox] = None
+
+	while queue:
+		current_node = heappop(queue)
+
+		# Check if current node is the destination
+		if current_node[1] == destinationbox:
+			done = 1
+			break
+			# List containing all cells from initial_position to destination
+			#path = [current_node]
+
+			# Go backwards from destination until the source using backpointers
+			# and add all the nodes in the shortest path into a list
+			#current_back_node = backpointers[current_node[1]]
+			#while current_back_node is not None:
+			 #   print(current_back_node)
+			  #  path.append(current_back_node)
+			  #  current_back_node = backpointers[current_back_node]
+
+			
+		adjacents = navigation_edges(adj[current_node[1]],current_node[1])
+		# Calculate cost from current note to all the adjacent ones
+		for next in adjacents :
+
+			pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
+
+			# If the cost is new
+			######
+			#NOTE: may have to check that i am checking distances correctly
+			######
+			if next[1] not in distances or pathcost < distances[next[1]]:
+				distances[next[1]] = pathcost
+				backpointers[next[1]] = current_node[1]
+				heappush(queue, (pathcost, next[1]))
+
+	if done == 1:
+		path = [(source_point, 0)]
+		goback = []
+
+		for key in goback:
+			nextpoint = get_detail_point()
+			path.append()
+		"""current =  destinationbox
+		point = source_point
+		while current != None:
+			goback.insert(0,current)
+			#print("current box: ", current)
+			current = backpointers[current]
+		
+		finaldistance = dimens(goback)   
+		endlist.append(source_point)
+		#print("this is :",source_point)
+		#print("goback contains: ", goback)"""
+
+		"""for key in goback:
+			currdistance = 0
+			maxdistance = 0
+			largestpoint = point
+			for val in finaldistance[key]:
+				currdistance = pythag(val, destination_point)
+				#print("currdistance: ", currdistance)
+				if currdistance < maxdistance or maxdistance == 0:
+					maxdistance = currdistance
+					#print("max distance updated: ", maxdistance)
+					largestpoint = val
+					#print("largestpoint: ", largestpoint)
+			point = largestpoint
+			print("this is point : ", point) 
+			endlist.append(point)
+
+		endlist.pop()
+		endlist.append(destination_point)        
+		print("endlist: ", endlist)
+		endlist = reverse(endlist)
+		return endlist, goback"""
+	return None 
+>>>>>>> Stashed changes
 	# path = []
 	#boxes = {}
 

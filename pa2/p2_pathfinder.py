@@ -61,7 +61,7 @@ def navigation_edges(level, cell):
         #NOTE : i used the lower number ie the start of the box
         #########
         # calculate the distance from cell to next_cell
-        dist = sqrt((box[3] - (cell[2]-(cell[3]-((cell[3]-cell[2])/2)))) ** 2 + (box[0] - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
+        dist = sqrt(((box[3]-((box[3]-box[2])/2)) - (cell[3]-((cell[3]-cell[2])/2))) ** 2 + ((box[1]-((box[1]-box[0])/2)) - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
         test = (dist,box)
         # calculate cost and add it to the dict of adjacent cells
         edges.append(test)
@@ -72,8 +72,8 @@ def heuristic(box, dest_point):
     cell = dest_point
 
     #print("box: ", box)
-    #print("dest_point: ", dest_point)
-    a = sqrt((box[3] - (cell[2]-(cell[3]-((cell[3]-cell[2])/2)))) ** 2 + (box[0] - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
+    #print("dest_point: ", dest_point) 
+    a = sqrt(((box[3]-((box[3]-box[2])/2)) -(cell[3]-((cell[3]-cell[2])/2))) ** 2 + ((box[1]-((box[1]-box[0])/2)) - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
     return a
 
 def find_path (source_point, destination_point, mesh):
@@ -132,21 +132,38 @@ def find_path (source_point, destination_point, mesh):
     # The priority queue
     queue = []
 
-    heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox))
+    heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox,"destination"))
     # The dictionary that will be returned with the costs
     distances = {}
     distances[sourcebox] = 0
+
 
     # The dictionary that will store the backpointers
     backpointers = {}
     backpointers[sourcebox] = None
 
+    #stuff that starts at back
+    heappush(queue,(heuristic(destinationbox,sourcebox),destinationbox,"source"))
+    distancesback = {}
+    distancesback[destinationbox] = 0
+
+    pointersback = {}
+    pointersback[destinationbox] = None
+    
+
+    #references that keep track of last nodes
+    startfinal = destinationbox
+    backfinal = sourcebox
+    done = 0
     while queue:
+        # the current node can be either back 
         current_node = heappop(queue)
-        #print(current_node)
+        print(current_node[2])
         #print(len(queue))
-        # Check if current node is the destination
-        if current_node[1] == destinationbox:
+
+        # Check if current node is overlapping with the other backtable
+        if (current_node[2]=="destination" and current_node[1] == destinationbox)or(current_node[2]== "source"and current_node[1] == sourcebox )or(current_node[2] == "source" and current_node[1] in backpointers ) or (current_node[2] == "destination" and current_node[1] in pointersback )    :
+            
             done = 1
             break
             # List containing all cells from initial_position to destination
@@ -159,34 +176,58 @@ def find_path (source_point, destination_point, mesh):
              #   print(current_back_node)
               #  path.append(current_back_node)
               #  current_back_node = backpointers[current_back_node]
-
-            
-        adjacents = navigation_edges(adj[current_node[1]],current_node[1])
+        
         # Calculate cost from current note to all the adjacent ones
-        for next in adjacents :
-            
-            pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
+        
+        if current_node[2] == "destination":
+                startfinal = current_node[1]    
+                adjacents = navigation_edges(adj[current_node[1]],current_node[1])
+                for next in adjacents :
+                    pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
 
-            # If the cost is new
-            ######
-            #NOTE: may have to check that i am checking distances correctly
-            ######
-            if next[1] not in distances or pathcost < distances[next[1]]:
-                #print("do we go here")
-                distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
-                backpointers[next[1]] = current_node[1]
-                heappush(queue, (distances[next[1]], next[1]))
+                    if next[1] not in distances or pathcost < distances[next[1]]:
+                        #print("do we go here")
+                        distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
+                        backpointers[next[1]] = current_node[1]
+                        heappush(queue, (distances[next[1]], next[1],"destination"))
+                        break
+
+        else:
+                backfinal = current_node[1]
+                adjacents = navigation_edges(adj[current_node[1]],current_node[1])
+                for next in adjacents :
+                    pathcost = distancesback[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
+
+
+                    if next[1] not in distancesback or pathcost < distancesback[next[1]]:
+                        #print("do we go here")
+                        distancesback[next[1]] = pathcost + heuristic(next[1], sourcebox)
+                        pointersback[next[1]] = current_node[1]
+                        heappush(queue, (distancesback[next[1]], next[1],"source"))
+                        break
 
     if done == 1:
         endlist = []
         goback = []
-        current =  destinationbox
+        current =  backfinal
         point = source_point
+        print("these are forward :",backpointers)
+        print("\n \nthese are back :",pointersback)
+        backpointers.update(pointersback)
+        goback = backpointers.keys()
+        return endlist, goback
+        while current != None:
+            goback.append(current)
+            #print("current box: ", current)
+            current = pointersback[current]
+        #goback.append(destinationbox)
+        current = startfinal
         while current != None:
             goback.insert(0,current)
             #print("current box: ", current)
             current = backpointers[current]
-        
+        #goback.insert(0,sourcebox)
+
         finaldistance = dimens(goback)   
         endlist.append(source_point)
         #print("this is :",source_point)

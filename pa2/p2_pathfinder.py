@@ -1,5 +1,14 @@
 from heapq import heappop, heappush
 from math import inf, sqrt
+def reverse(obj):
+    temp = []
+    for key in obj:
+        if key == obj[0] or key == obj[len(obj)-1]:
+            temp.append(key)
+            continue
+        temp.append((key[1],key[0]))
+    return temp
+
 def dimens(boxes):
     boxpoints = {}
     for current in boxes:
@@ -14,7 +23,7 @@ def dimens(boxes):
     return boxpoints 
     
 def pythag(val, point):
-	diagonal = sqrt((val[0] - point[0]) ** 2 + (val[1] - point[1]) ** 2) * 0.5
+	diagonal = sqrt((val[0] - point[1]) ** 2 + (val[1] - point[0]) ** 2) * 0.5
 	return diagonal
 
 def navigation_edges(level, cell):
@@ -158,24 +167,30 @@ def find_path (source_point, destination_point, mesh):
             current = backpointers[current]
         
         finaldistance = dimens(goback)   
-        endlist.append(point)
+        endlist.append(source_point)
+        #print("this is :",source_point)
         #print("goback contains: ", goback)
+
         for key in goback:
             currdistance = 0
             maxdistance = 0
             largestpoint = point
             for val  in finaldistance[key]:
-                currdistance = pythag(val, point)
-                print("currdistance: ", currdistance)
+                currdistance = pythag(val, destination_point)
+                #print("currdistance: ", currdistance)
                 if currdistance < maxdistance or maxdistance == 0:
                     maxdistance = currdistance
-                    print("max distance updated: ", maxdistance)
+                    #print("max distance updated: ", maxdistance)
                     largestpoint = val
-                    print("largestpoint: ", largestpoint)
-            point = largestpoint 
+                    #print("largestpoint: ", largestpoint)
+            point = largestpoint
+            print("this is point : ", point) 
             endlist.append(point)
-        
+
+        endlist.pop()
+        endlist.append(destination_point)        
         print("endlist: ", endlist)
+        endlist = reverse(endlist)
         return endlist, goback
     return None 
     # path = []

@@ -16,14 +16,19 @@ def dimens(boxes):
         x2 = current[3]
         y1 = current[0]
         y2 = current[1]
-        print("x1: ", x1, "\n x2: ", x2, "\n y1: ", y1, "\n y2: ", y2)
+        #print("x1: ", x1, "\n x2: ", x2, "\n y1: ", y1, "\n y2: ", y2)
         width = x2 -x1
         height = y2 - y1
         boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
     return boxpoints 
     
-def pythag(val, point):
-	diagonal = sqrt((val[0] - point[1]) ** 2 + (val[1] - point[0]) ** 2) * 0.5
+def pythag(coord1, coord2):
+	x1 = coord1[0]
+	x2 = coord2[0]
+	y1 = coord1[1]
+	y2 = coord2[1]
+
+	diagonal = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2) * 0.5
 	return diagonal
 
 def navigation_edges(level, cell):

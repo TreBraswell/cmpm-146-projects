@@ -1,3 +1,4 @@
+
 from heapq import heappop, heappush
 from math import inf, sqrt
 def reverse(obj):
@@ -29,17 +30,17 @@ def get_detail_point(starting_points, next_box):
     next_y1 = next_box[0]
     next_y2 = next_box[1]
 
-    detail_point = (min(next_x2, max(next_x1, x)), min(next_y2, max(next_y1, y)))
+    detail_point = (min(next_x2-1, max(next_x1, x)), min(next_y2-1, max(next_y1, y)))
     return detail_point
 
 def pythag(coord1, coord2):
-	x1 = coord1[0]
-	x2 = coord2[0]
-	y1 = coord1[1]
-	y2 = coord2[1]
+    x1 = coord1[0]
+    x2 = coord2[0]
+    y1 = coord1[1]
+    y2 = coord2[1]
 
-	diagonal = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2) * 0.5
-	return diagonal
+    diagonal = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2) * 0.5
+    return diagonal
 
 def navigation_edges(level, cell):
     """ Provides a list of adjacent cells and their respective costs from the given cell.
@@ -55,12 +56,11 @@ def navigation_edges(level, cell):
     # Visit all adjacent cells
     for box in level:
             
-        half1x = (box[3]+box[2])/2
-        half1y = (box[1]+box[0])/2
-        half2x = (cell[3]+cell[2])/2
-        half2y = (cell[1]+cell[0])/2
-
-        dist = sqrt((half1x - half2x) ** 2 + (half1y-half2y) ** 2) * 0.5
+        #########
+        #NOTE : i used the lower number ie the start of the box
+        #########
+        # calculate the distance from cell to next_cell
+        dist = sqrt((box[3] - (cell[2]-(cell[3]-((cell[3]-cell[2])/2)))) ** 2 + (box[0] - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
         test = (dist,box)
         # calculate cost and add it to the dict of adjacent cells
         edges.append(test)
@@ -100,8 +100,8 @@ def find_path (source_point, destination_point, mesh):
     dx = destination_point[1]
     dy = destination_point[0]
 
-    print("source_point: ", sx, ", ", sy)
-    print("destination_point: ", dx, ", ", dy)
+    #print("source_point: ", sx, ", ", sy)
+    #print("destination_point: ", dx, ", ", dy)
 
     for key in boxes:
         x1 = key[2]
@@ -130,9 +130,9 @@ def find_path (source_point, destination_point, mesh):
 
     # The priority queue
     queue = []
+    done = 0
 
-    #heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox))
-    #heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox,"destination"))
+    heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox))
     # The dictionary that will be returned with the costs
     distances = {}
     distances[sourcebox] = 0
@@ -140,29 +140,18 @@ def find_path (source_point, destination_point, mesh):
     # The dictionary that will store the backpointers
     backpointers = {}
     backpointers[sourcebox] = None
-    #heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox))
-    
-    #stuff that starts at back
-    heappush(queue,(heuristic(destinationbox,sourcebox),destinationbox,"source"))
-    
-    distancesback = {}
-    distancesback[destinationbox] = 0
 
-    pointersback = {}
-    pointersback[destinationbox] = None
-    done = 0
+    nosolution = []
+    nosolution2 = []
+
     while queue:
         current_node = heappop(queue)
         #print(current_node)
         #print(len(queue))
         # Check if current node is the destination
-        if current_node[1] == sourcebox:
+        if current_node[1] == destinationbox:
             done = 1
-            print("do we go here?")
             break
-        """if current_node[1] == destinationbox:
-            done = 1
-            break"""
             # List containing all cells from initial_position to destination
             #path = [current_node]
 
@@ -174,41 +163,30 @@ def find_path (source_point, destination_point, mesh):
               #  path.append(current_back_node)
               #  current_back_node = backpointers[current_back_node]
 
-         
+            
         adjacents = navigation_edges(adj[current_node[1]],current_node[1])
         # Calculate cost from current note to all the adjacent ones
-        if current_node[2] =="destination":
-            for next in adjacents :
+        for next in adjacents :
             
-                pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
+            pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
 
-                # If the cost is new
-                ######
-                #NOTE: may have to check that i am checking distances correctly
-                ######
-                if next[1] not in distances or pathcost < distances[next[1]]:
-                    #print("do we go here")
-                    distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
-                    backpointers[next[1]] = current_node[1]
-                    heappush(queue, (distances[next[1]], next[1],"destination"))
-        elif current_node[2] == "source":
-            print("source")
-            for next in adjacents :
-                pathcost = distancesback[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
-
-
-                if next[1] not in distancesback or pathcost < distancesback[next[1]]:
-                    #print("do we go here")
-                        print("test")
-                        distancesback[next[1]] = pathcost + heuristic(next[1], sourcebox)
-                        pointersback[next[1]] = current_node[1]
-                        heappush(queue, (distancesback[next[1]], next[1],"source"))
-                        break    
-    if done == 1:
+            # If the cost is new
+            ######
+            #NOTE: may have to check that i am checking distances correctly
+            ######
+            if next[1] not in distances or pathcost < distances[next[1]]:
+                #print("do we go here")
+                distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
+                backpointers[next[1]] = current_node[1]
+                heappush(queue, (distances[next[1]], next[1]))
+    if done == 0:
+        print("No path!")
+        return nosolution, nosolution2
+            
+    elif done == 1:
         endlist = []
         goback = []
-        current =  sourcebox
-        backpointers = pointersback
+        current =  destinationbox
         point = source_point
         while current != None:
             goback.insert(0,current)
@@ -250,13 +228,10 @@ def find_path (source_point, destination_point, mesh):
 
         #endlist.pop()
         endlist.append(destination_point)        
-        print("endlist: ", endlist)
+        #print("endlist: ", endlist)
         endlist = reverse(endlist)
-        if not endlist:
-            print("No path!")
-            return endlist, goback
-        else:
-            return endlist, goback
+        return endlist, goback
+        
     # path = []
     #boxes = {}
 

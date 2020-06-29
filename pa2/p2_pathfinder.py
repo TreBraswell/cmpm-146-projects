@@ -21,7 +21,17 @@ def dimens(boxes):
         height = y2 - y1
         boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
     return boxpoints 
-    
+
+def get_detail_point(starting_points, next_box):
+    x, y = starting_points
+    next_x1 = next_box[2]
+    next_x2 = next_box[3]
+    next_y1 = next_box[0]
+    next_y2 = next_box[1]
+
+    detail_point = (min(next_x2, max(next_x1, x)), min(next_y2, max(next_y1, y)))
+    return detail_point
+
 def pythag(coord1, coord2):
 	x1 = coord1[0]
 	x2 = coord2[0]
@@ -56,11 +66,18 @@ def navigation_edges(level, cell):
         # calculate cost and add it to the dict of adjacent cells
         edges.append(test)
     return edges
-    pass
 
-def heuristic(a, b):
+def heuristic(box, dest_point):
 
-    return abs(int(a[0]) - int(b[0])) + abs(int(a[1]) - int(b[1]))
+    """x1 = current[2]
+        x2 = current[3]
+        y1 = current[0]
+        y2 = current[1]"""
+
+    #print("box: ", box)
+    #print("dest_point: ", dest_point)
+    if()
+    return abs(int(box[3]) - int(dest_point[2])) + abs(int(box[1]) - int(dest_point[0]))
 
 def find_path (source_point, destination_point, mesh):
 
@@ -118,7 +135,7 @@ def find_path (source_point, destination_point, mesh):
     # The priority queue
     queue = []
 
-    heappush(queue,(0,sourcebox))
+    heappush(queue,(heuristic(sourcebox, destinationbox),sourcebox))
     # The dictionary that will be returned with the costs
     distances = {}
     distances[sourcebox] = 0
@@ -157,7 +174,7 @@ def find_path (source_point, destination_point, mesh):
             #NOTE: may have to check that i am checking distances correctly
             ######
             if next[1] not in distances or pathcost < distances[next[1]]:
-                distances[next[1]] = pathcost
+                distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
                 backpointers[next[1]] = current_node[1]
                 heappush(queue, (pathcost, next[1]))
 
@@ -184,11 +201,14 @@ def find_path (source_point, destination_point, mesh):
             if i ==1:
                 prevkey = key
                 continue 
-            currdistance = 0
+            point = get_detail_point(point, key)
+            endlist.append(point)
+            
+            """currdistance = 0
             maxdistance = 0
             largestpoint = point
             for val  in finaldistance[key]:
-                currdistance = pythag(val, destination_point)
+                currdistance = pythag(val, point)
                 #print("currdistance: ", currdistance)
                 if currdistance < maxdistance or maxdistance == 0:
                     
@@ -196,17 +216,21 @@ def find_path (source_point, destination_point, mesh):
                     #print("max distance updated: ", maxdistance)
                     largestpoint = val
                     #print("largestpoint: ", largestpoint)
+
             point = largestpoint
             prevkey = key
             print("this is point : ", point) 
-            endlist.append(point)
+            endlist.append(point)"""
 
-        endlist.pop()
+        #endlist.pop()
         endlist.append(destination_point)        
         print("endlist: ", endlist)
         endlist = reverse(endlist)
-        return endlist, goback
-    return None 
+        if not endlist:
+            print("No path!")
+            return endlist, goback
+        else:
+            return endlist, goback
     # path = []
     #boxes = {}
 

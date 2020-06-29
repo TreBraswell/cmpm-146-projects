@@ -61,7 +61,7 @@ def navigation_edges(level, cell):
         #NOTE : i used the lower number ie the start of the box
         #########
         # calculate the distance from cell to next_cell
-        dist = sqrt((box[2] - cell[2]) ** 2 + (box[0] - cell[0]) ** 2) * 0.5
+        dist = sqrt((box[3] - (cell[2]-(cell[3]-((cell[3]-cell[2])/2)))) ** 2 + (box[0] - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
         test = (dist,box)
         # calculate cost and add it to the dict of adjacent cells
         edges.append(test)
@@ -69,15 +69,12 @@ def navigation_edges(level, cell):
 
 def heuristic(box, dest_point):
 
-    """x1 = current[2]
-        x2 = current[3]
-        y1 = current[0]
-        y2 = current[1]"""
+    cell = dest_point
 
     #print("box: ", box)
     #print("dest_point: ", dest_point)
-    if()
-    return abs(int(box[3]) - int(dest_point[2])) + abs(int(box[1]) - int(dest_point[0]))
+    a = sqrt((box[3] - (cell[2]-(cell[3]-((cell[3]-cell[2])/2)))) ** 2 + (box[0] - (cell[1]-((cell[1]-cell[0])/2))) ** 2) * 0.5
+    return a
 
 def find_path (source_point, destination_point, mesh):
 
@@ -146,7 +143,8 @@ def find_path (source_point, destination_point, mesh):
 
     while queue:
         current_node = heappop(queue)
-
+        #print(current_node)
+        #print(len(queue))
         # Check if current node is the destination
         if current_node[1] == destinationbox:
             done = 1
@@ -166,7 +164,7 @@ def find_path (source_point, destination_point, mesh):
         adjacents = navigation_edges(adj[current_node[1]],current_node[1])
         # Calculate cost from current note to all the adjacent ones
         for next in adjacents :
-
+            
             pathcost = distances[current_node[1]] + next[0] # their is going to some errors because i am just adding them all together
 
             # If the cost is new
@@ -174,9 +172,10 @@ def find_path (source_point, destination_point, mesh):
             #NOTE: may have to check that i am checking distances correctly
             ######
             if next[1] not in distances or pathcost < distances[next[1]]:
+                #print("do we go here")
                 distances[next[1]] = pathcost + heuristic(next[1], destinationbox)
                 backpointers[next[1]] = current_node[1]
-                heappush(queue, (pathcost, next[1]))
+                heappush(queue, (distances[next[1]], next[1]))
 
     if done == 1:
         endlist = []

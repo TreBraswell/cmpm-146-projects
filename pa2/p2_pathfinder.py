@@ -199,6 +199,7 @@ def find_path (source_point, destination_point, mesh):
 
                 if next[1] not in distancesback or pathcost < distancesback[next[1]]:
                     #print("do we go here")
+                        print("test")
                         distancesback[next[1]] = pathcost + heuristic(next[1], sourcebox)
                         pointersback[next[1]] = current_node[1]
                         heappush(queue, (distancesback[next[1]], next[1],"source"))

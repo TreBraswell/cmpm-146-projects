@@ -22,14 +22,29 @@ def dimens(boxes):
         boxpoints[current] = ((x1,y1),(x1+width,y1),(x1,y1+height),(x2,y2))
     return boxpoints 
 
-def get_detail_point(starting_points, next_box):
-    x, y = starting_points
+def get_detail_point(starting_points, current_box, next_box):
+    y, x = starting_points
     next_x1 = next_box[2]
     next_x2 = next_box[3]
     next_y1 = next_box[0]
     next_y2 = next_box[1]
+    current_x1 = current_box[2]
+    current_x2 = current_box[3]
+    current_y1 = current_box[0]
+    current_y2 = current_box[1]
 
-    detail_point = (min(next_x2-1, max(next_x1, x)), min(next_y2-1, max(next_y1, y)))
+    print("next_x1: ", next_x1)
+    print("next_x2: ", next_x2)
+    print("next_y1: ", next_y1)
+    print("next_y2: ", next_y2)
+    print("x: ", x)
+    print("y: ", y)
+    xleftconstraint = min(current_x2, next_x2)
+    xrightconstraint = max(current_x1, next_x1)
+    yleftconstraint = min(current_y2, next_y2)
+    yrightconstraint = max(current_y1, next_y1)
+
+    detail_point = (min(xleftconstraint, max(xrightconstraint, x)), min(yleftconstraint, max(yrightconstraint, y)))
     return detail_point
 
 def pythag(coord1, coord2):
@@ -206,7 +221,8 @@ def find_path (source_point, destination_point, mesh):
             if i ==1:
                 prevkey = key
                 continue 
-            point = get_detail_point(point, key)
+            point = get_detail_point(point, prevkey, key)
+            prevkey = key
             endlist.append(point)
             
             """currdistance = 0

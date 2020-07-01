@@ -18,7 +18,17 @@ def traverse_nodes(node, board, state, identity):
     Returns:        A node from which the next stage of the search can proceed.
 
     """
-    pass
+
+    # For first node, will pick root because it is also leaf node
+    # UCB - X is how many times won over how many times played (visited)
+    # C is hardcoded, we can choose. Lower C value is exploitation, higher is exploration.
+    # Use highest UCB to choose each node down a path until leaf_node is reached
+
+
+
+    leaf_node = node.untried_actions[random.randrange(0, len(node.untried_actions))]
+
+    return leaf_node
     # Hint: return leaf_node
 
 
@@ -33,7 +43,17 @@ def expand_leaf(node, board, state):
     Returns:    The added child node.
 
     """
-    pass
+
+    # Create new node from parent node
+    # Can choose action randomly
+    # Action list comes from node.untried_actions?
+    parent_node = node 
+
+    new_node = MCTSNode(parent=parent_node, parent_action=None, action_list=board.legal_actions(state))
+
+
+
+    return new_node
     # Hint: return new_node
 
 
@@ -43,8 +63,12 @@ def rollout(board, state):
     Args:
         board:  The game setup.
         state:  The state of the game.
+    return state/ board at the end - see who won
 
     """
+
+    # Return who won this game (board or state)
+    # board.is_ended(state) == true when over
     pass
 
 
@@ -78,6 +102,8 @@ def think(board, state):
 
         # Start at root
         node = root_node
+
+
 
         # Do MCTS - This is all you!
 

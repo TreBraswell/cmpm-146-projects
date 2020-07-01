@@ -21,12 +21,24 @@ def traverse_nodes(node, board, state, identity):
 
     # For first node, will pick root because it is also leaf node
     # UCB - X is how many times won over how many times played (visited)
+    # x = node.wins/node.visits (if visits != 0)
     # C is hardcoded, we can choose. Lower C value is exploitation, higher is exploration.
+    # Try C = 2
     # Use highest UCB to choose each node down a path until leaf_node is reached
 
+    current = node
+    ucb = {}
 
+    while current.visits != 0:
+        for child in current.child_nodes:
+            ucb[child] = child.wins/child.visits + 2 * (math.sqrt((2 * math.log(child.parent.visits))/ child.visits))
+            index ++
+        key_list = list(ucb.keys())
+        val_list = list(ucb.values())
+        current = key_list[val_list.index(max(ucb))]
 
-    leaf_node = node.untried_actions[random.randrange(0, len(node.untried_actions))]
+    leaf_node = current
+    # leaf_node = node.untried_actions[random.randrange(0, len(node.untried_actions))]
 
     return leaf_node
     # Hint: return leaf_node
@@ -48,12 +60,13 @@ def expand_leaf(node, board, state):
     # Can choose action randomly
     # Action list comes from node.untried_actions?
     parent_node = node 
+    actions = parent_node.untried_actions
 
-    new_node = MCTSNode(parent=parent_node, parent_action=None, action_list=board.legal_actions(state))
+    child_node = MCTSNode(parent=parent_node, parent_action=parent_node.untried_actions[0], action_list=parent_node.untried_actions)
 
+    parent_node.child_nodes.append(child_node)
 
-
-    return new_node
+    return child_node
     # Hint: return new_node
 
 
@@ -69,17 +82,20 @@ def rollout(board, state):
 
     # Return who won this game (board or state)
     # board.is_ended(state) == true when over
+    # Same as Rollout bot, can basically copy/paste
     pass
 
 
 def backpropagate(node, won):
     """ Navigates the tree from a leaf node to the root, updating the win and visit count of each node along the path.
-
+    
     Args:
         node:   A leaf node.
         won:    An indicator of whether the bot won or lost the game.
 
     """
+
+    # Update node.wins and node.visit
     pass
 
 

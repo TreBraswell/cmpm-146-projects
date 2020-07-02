@@ -7,10 +7,10 @@ from math import sqrt, log
 #why does backpropagate not work?
 #The flip(i.e how do we use the function  for the opponent)
 #is rollout correct?
-num_nodes = 1000
+num_nodes = 100
 explore_faction = 2.
 
-ROLLOUTS = 10
+ROLLOUTS = 1000
 MAX_DEPTH = 5
 
 def traverse_nodes(node, board, state, identity):
@@ -29,7 +29,7 @@ def traverse_nodes(node, board, state, identity):
     # C is hardcoded, we can choose. Lower C value is exploitation, higher is exploration.
     # Try C = 2
     # Use highest UCB to choose each node down a path until leaf_node is reached
-
+    turn = identity
     current = node
     ucb = {}
 
@@ -37,24 +37,43 @@ def traverse_nodes(node, board, state, identity):
     max_ucb = 0
 
     if current.visits != 0:
-        for action in current.parent.child_nodes:
 
-            child = current.parent.child_nodes[action]
-            exploitation = child.wins/child.visits
+        for action in current.child_nodes:
+            
+            if turn == identity:
+                child = current.child_nodes[action]
+                exploitation = child.wins/child.visits
 
-            exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
 
-            ucb[child] = exploitation + exploration
+                ucb[child] = exploitation + exploration
 
-            if ucb[child] > max_ucb:
-                max_ucb = ucb[child]
-                temp = child 
-        current = temp
+                if ucb[child] > max_ucb:
+                    max_ucb = ucb[child]
+                    temp = child 
+            else:
+                child = current.child_nodes[action]
+                exploitation = 1 - (child.wins/child.visits)
+
+                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+
+                ucb[child] = exploitation + exploration
+
+                if ucb[child] < max_ucb:
+                    max_ucb = ucb[child]
+                    temp = child 
+            if turn == 1:
+                turn = 2
+            elif turn == 2:
+                turn = 1
+            current = temp
+
 
     leaf_node = current
-    leaf_node.visits+=1
+
     return leaf_node
     # Hint: return leaf_node
+
 
 
 def expand_leaf(node, board, state):
@@ -70,11 +89,18 @@ def expand_leaf(node, board, state):
     # Can choose action randomly
     # Action list comes from node.untried_actions?
     parent_node = node 
-    actions = parent_node.untried_actions
-
-    child_node = MCTSNode(parent=parent_node, parent_action=actions[0], action_list=actions)
-
-    parent_node.child_nodes[actions[0]] = child_node
+    actions1 = board.legal_actions(state)
+    state2 = board.next_state(state, actions1[0])
+    actions2 = board.legal_actions(state2)
+    #print(actions[0])
+    
+    child_node = MCTSNode(parent=parent_node, parent_action=actions1[0], action_list=board.legal_actions(state2))
+    try:
+        parent_node.child_nodes[actions2[0]] = child_node
+    except: 
+        return child_node
+        parent_node.child_nodes[actions1[0]] = child_node
+        print("it broke", actions2, "also :", actions1)
     return child_node
 
     
@@ -94,51 +120,11 @@ def rollout(board, state):
     # Same as Rollout bot, can basically copy/paste
     # pass
 
+    while not  board.is_ended(state):
+        move = random.choice(board.legal_actions(state))
+        state = board.next_state(state,move)
 
-
-    moves = board.legal_actions(state)
-    if len(moves) == 0:
-        return 0
-    best_move = moves[0]
-    best_expectation = float('-inf')
-
-    me = board.current_player(state)
-
-    def outcome(owned_boxes, game_points):
-        if game_points is not None:
-            # Try to normalize it up?  Not so sure about this code anyhow.
-            red_score = game_points[1]*9
-            blue_score = game_points[2]*9
-        else:
-            red_score = len([v for v in owned_boxes.values() if v == 1])
-            blue_score = len([v for v in owned_boxes.values() if v == 2])
-        return red_score - blue_score if me == 1 else blue_score - red_score
-
-    for move in moves:
-        total_score = 0.0
-
-        # Sample a set number of games where the target move is immediately applied.
-        for r in range(ROLLOUTS):
-            rollout_state = board.next_state(state, move)
-
-            # Only play to the specified depth.
-            for i in range(MAX_DEPTH):
-                if board.is_ended(rollout_state):
-                    break
-                rollout_move = random.choice(board.legal_actions(rollout_state))
-                rollout_state = board.next_state(rollout_state, rollout_move)
-
-            total_score += outcome(board.owned_boxes(rollout_state),
-                                   board.points_values(rollout_state))
-
-        expectation = total_score
-
-        # If the current move has a better average score, replace best_move and best_expectation
-        if expectation > best_expectation:
-            best_expectation = expectation
-            best_move = move
-
-    return best_expectation
+    return board.current_player(state)
 
 
 def backpropagate(node, won):
@@ -169,21 +155,23 @@ def think(board, state):
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
     i = 0
 
-    most_wins = root_node
     for step in range(num_nodes):
         # Copy the game for sampling a playthrough
         sampled_game = state
 
         # Start at root
-        node = root_node
-
+        #print("this is the length : ",len(root_node.child_nodes))
 
         leaf_node = traverse_nodes(root_node, board, state, identity_of_bot)
-
         child_node = expand_leaf(leaf_node, board, state)
+        if len(child_node.untried_actions) == 0:
+            print("drawsss")
+            bestAction = child_node.parent_action
+            break
         parent_node = child_node.parent
         actions = parent_node.untried_actions
         wins = rollout(board, board.next_state(state, actions[0])) 
+
         temp = child_node
         temp.visits += 1
         temp.wins += wins
@@ -192,14 +180,17 @@ def think(board, state):
             temp.visits += 1
             temp.wins += wins
         
-
-        if child_node.wins >= 1.0 or child_node.wins <= -1.0 :
-            print("Returns")
-            return child_node.parent_action
-        root_node = child_node 
+        root_node = temp
+    
+    highscore=-1
+    #print("test2")
+    for x in root_node.child_nodes:
+        temp2=root_node.child_nodes[x]
+        if ((temp2.wins/temp2.visits)>highscore) and x!=None:
+            highscore=(temp2.wins/temp2.visits)
+            bestAction=x
 
         # Do MCTS - This is all you!
-
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
-    return child_node.parent_action
+    return bestAction 

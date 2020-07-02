@@ -1,10 +1,14 @@
 
 from mcts_node import MCTSNode
 from random import choice
+import random
 from math import sqrt, log
 
 num_nodes = 1000
 explore_faction = 2.
+
+ROLLOUTS = 10
+MAX_DEPTH = 5
 
 def traverse_nodes(node, board, state, identity):
     """ Traverses the tree until the end criterion are met.
@@ -26,16 +30,41 @@ def traverse_nodes(node, board, state, identity):
     # Try C = 2
     # Use highest UCB to choose each node down a path until leaf_node is reached
 
+    # print("test")
     current = node
     ucb = {}
 
-    while current.visits != 0:
-        for child in current.child_nodes:
-            ucb[child] = child.wins/child.visits + 2 * (math.sqrt((2 * math.log(child.parent.visits))/ child.visits))
-            index ++
-        key_list = list(ucb.keys())
-        val_list = list(ucb.values())
-        current = key_list[val_list.index(max(ucb))]
+    temp = node
+    max_ucb = 0
+
+    # print(current.visits)
+
+    if current.visits != 0:
+        # print(current.parent.child_nodes)
+        for action in current.parent.child_nodes:
+
+            # print(current.parent.child_nodes[action])
+            # print("test")
+
+            child = current.parent.child_nodes[action]
+            exploitation = child.wins/child.visits
+
+            # log_val = log(child.visits)
+            exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+
+            ucb[child] = exploitation + exploration
+
+            if ucb[child] > max_ucb:
+                max_ucb = ucb[child]
+                temp = child 
+            # ucb[child] = child.wins/child.visits + 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
+            # index ++
+        # current.visits += 1
+        # key_list = list(ucb.keys())
+        # val_list = list(ucb.values())
+        # print("UCB: ", ucb)
+        # current = key_list[val_list.index(max_ucb)]
+        current = temp
 
     leaf_node = current
     # leaf_node = node.untried_actions[random.randrange(0, len(node.untried_actions))]
@@ -62,9 +91,16 @@ def expand_leaf(node, board, state):
     parent_node = node 
     actions = parent_node.untried_actions
 
-    child_node = MCTSNode(parent=parent_node, parent_action=parent_node.untried_actions[0], action_list=parent_node.untried_actions)
+    child_node = MCTSNode(parent=parent_node, parent_action=actions[0], action_list=actions)
 
-    parent_node.child_nodes.append(child_node)
+    parent_node.child_nodes[actions[0]] = child_node
+
+    # parent_node.child_nodes.append(child_node)
+
+    wins = rollout(board, board.next_state(state, actions[0])) 
+    # print(child_node.wins)
+    backpropagate(child_node, wins)
+    # print(child_node.wins)
 
     return child_node
     # Hint: return new_node
@@ -83,7 +119,55 @@ def rollout(board, state):
     # Return who won this game (board or state)
     # board.is_ended(state) == true when over
     # Same as Rollout bot, can basically copy/paste
-    pass
+    # pass
+
+
+
+    moves = board.legal_actions(state)
+    if len(moves) == 0:
+        return 0
+    best_move = moves[0]
+    best_expectation = float('-inf')
+
+    me = board.current_player(state)
+
+    def outcome(owned_boxes, game_points):
+        if game_points is not None:
+            # Try to normalize it up?  Not so sure about this code anyhow.
+            red_score = game_points[1]*9
+            blue_score = game_points[2]*9
+        else:
+            red_score = len([v for v in owned_boxes.values() if v == 1])
+            blue_score = len([v for v in owned_boxes.values() if v == 2])
+        return red_score - blue_score if me == 1 else blue_score - red_score
+
+    for move in moves:
+        total_score = 0.0
+
+        # Sample a set number of games where the target move is immediately applied.
+        for r in range(ROLLOUTS):
+            rollout_state = board.next_state(state, move)
+
+            # Only play to the specified depth.
+            for i in range(MAX_DEPTH):
+                if board.is_ended(rollout_state):
+                    break
+                rollout_move = random.choice(board.legal_actions(rollout_state))
+                rollout_state = board.next_state(rollout_state, rollout_move)
+
+            total_score += outcome(board.owned_boxes(rollout_state),
+                                   board.points_values(rollout_state))
+
+        expectation = total_score
+        # print(expectation)
+
+        # If the current move has a better average score, replace best_move and best_expectation
+        if expectation > best_expectation:
+            best_expectation = expectation
+            best_move = move
+
+    # print(best_expectation)
+    return best_expectation
 
 
 def backpropagate(node, won):
@@ -96,7 +180,17 @@ def backpropagate(node, won):
     """
 
     # Update node.wins and node.visit
-    pass
+
+    if node.parent == None:
+        node.visits += 1
+        node.wins += won
+        # print(node.wins)
+        return node
+    node.wins += won
+    node.visits += 1
+    # print("test")
+    return backpropagate(node.parent, won)
+
 
 
 def think(board, state):
@@ -112,6 +206,9 @@ def think(board, state):
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
 
+    # print(identity_of_bot)
+
+    most_wins = root_node
     for step in range(num_nodes):
         # Copy the game for sampling a playthrough
         sampled_game = state
@@ -119,10 +216,27 @@ def think(board, state):
         # Start at root
         node = root_node
 
+        leaf_node = traverse_nodes(root_node, board, state, identity_of_bot)
+        child_node = expand_leaf(leaf_node, board, state)
 
+        print("This is child_node.wins: ", child_node.wins)
+        if child_node.wins >= 1.0 or child_node.wins <= -1.0 or child_node.wins == 0:
+            print("Returns")
+            return child_node.parent_action
+        root_node = child_node 
+        # print(root_node.visits)
+
+    # if root_node.wins > most_wins.wins:
+    #     most_wins = root_node
+
+
+    # print("This is root node", root_node)
+
+    # print (most_wins.parent_action)
+    # print(child_node.parent_action)
 
         # Do MCTS - This is all you!
 
     # Return an action, typically the most frequently used action (from the root) or the action with the best
     # estimated win rate.
-    return None
+    return child_node.parent_action

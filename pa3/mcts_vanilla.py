@@ -7,7 +7,7 @@ from math import sqrt, log
 #why does backpropagate not work?
 #The flip(i.e how do we use the function  for the opponent)
 #is rollout correct?
-num_nodes = 100
+num_nodes = 10
 explore_faction = 2.
 
 ROLLOUTS = 1000
@@ -41,10 +41,11 @@ def traverse_nodes(node, board, state, identity):
         for action in current.child_nodes:
             
             if turn == identity:
+                #print(len(current.child_nodes))
                 child = current.child_nodes[action]
                 exploitation = child.wins/child.visits
 
-                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+                exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
 
                 ucb[child] = exploitation + exploration
 
@@ -52,10 +53,11 @@ def traverse_nodes(node, board, state, identity):
                     max_ucb = ucb[child]
                     temp = child 
             else:
+                print("switch2")
                 child = current.child_nodes[action]
                 exploitation = 1 - (child.wins/child.visits)
 
-                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+                exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
 
                 ucb[child] = exploitation + exploration
 

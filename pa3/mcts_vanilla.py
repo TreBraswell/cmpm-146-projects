@@ -30,26 +30,18 @@ def traverse_nodes(node, board, state, identity):
     # Try C = 2
     # Use highest UCB to choose each node down a path until leaf_node is reached
 
-    # print("test")
     current = node
     ucb = {}
 
     temp = node
     max_ucb = 0
 
-    # print(current.visits)
-
     if current.visits != 0:
-        # print(current.parent.child_nodes)
         for action in current.parent.child_nodes:
-
-            # print(current.parent.child_nodes[action])
-            # print("test")
 
             child = current.parent.child_nodes[action]
             exploitation = child.wins/child.visits
 
-            # log_val = log(child.visits)
             exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
 
             ucb[child] = exploitation + exploration
@@ -57,17 +49,9 @@ def traverse_nodes(node, board, state, identity):
             if ucb[child] > max_ucb:
                 max_ucb = ucb[child]
                 temp = child 
-            # ucb[child] = child.wins/child.visits + 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
-            # index ++
-        # current.visits += 1
-        # key_list = list(ucb.keys())
-        # val_list = list(ucb.values())
-        # print("UCB: ", ucb)
-        # current = key_list[val_list.index(max_ucb)]
         current = temp
 
     leaf_node = current
-    # leaf_node = node.untried_actions[random.randrange(0, len(node.untried_actions))]
 
     return leaf_node
     # Hint: return leaf_node
@@ -95,12 +79,8 @@ def expand_leaf(node, board, state):
 
     parent_node.child_nodes[actions[0]] = child_node
 
-    # parent_node.child_nodes.append(child_node)
-
     wins = rollout(board, board.next_state(state, actions[0])) 
-    # print(child_node.wins)
     backpropagate(child_node, wins)
-    # print(child_node.wins)
 
     return child_node
     # Hint: return new_node
@@ -159,14 +139,12 @@ def rollout(board, state):
                                    board.points_values(rollout_state))
 
         expectation = total_score
-        # print(expectation)
 
         # If the current move has a better average score, replace best_move and best_expectation
         if expectation > best_expectation:
             best_expectation = expectation
             best_move = move
 
-    # print(best_expectation)
     return best_expectation
 
 
@@ -184,11 +162,9 @@ def backpropagate(node, won):
     if node.parent == None:
         node.visits += 1
         node.wins += won
-        # print(node.wins)
         return node
     node.wins += won
     node.visits += 1
-    # print("test")
     return backpropagate(node.parent, won)
 
 
@@ -206,7 +182,6 @@ def think(board, state):
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
 
-    # print(identity_of_bot)
 
     most_wins = root_node
     for step in range(num_nodes):
@@ -224,16 +199,7 @@ def think(board, state):
             print("Returns")
             return child_node.parent_action
         root_node = child_node 
-        # print(root_node.visits)
 
-    # if root_node.wins > most_wins.wins:
-    #     most_wins = root_node
-
-
-    # print("This is root node", root_node)
-
-    # print (most_wins.parent_action)
-    # print(child_node.parent_action)
 
         # Do MCTS - This is all you!
 

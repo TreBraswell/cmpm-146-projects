@@ -1,4 +1,3 @@
-
 from mcts_node import MCTSNode
 from random import choice
 import random
@@ -12,15 +11,12 @@ MAX_DEPTH = 5
 
 def traverse_nodes(node, board, state, identity):
     """ Traverses the tree until the end criterion are met.
-
     Args:
         node:       A tree node from which the search is traversing.
         board:      The game setup.
         state:      The state of the game.
         identity:   The bot's identity, either 'red' or 'blue'.
-
     Returns:        A node from which the next stage of the search can proceed.
-
     """
 
     # For first node, will pick root because it is also leaf node
@@ -29,13 +25,6 @@ def traverse_nodes(node, board, state, identity):
     # C is hardcoded, we can choose. Lower C value is exploitation, higher is exploration.
     # Try C = 2
     # Use highest UCB to choose each node down a path until leaf_node is reached
-    # me = identity
-    # if me == 1:
-    #     turn = me
-    #     opponent = 2
-    # else:
-    #     opponent = 1
-    #     turn = opponent
 
     current = node
     ucb = {}
@@ -46,51 +35,31 @@ def traverse_nodes(node, board, state, identity):
     if current.visits != 0:
         for action in current.parent.child_nodes:
 
-            if turn == identity:
-                child = current.parent.child_nodes[action]
-                exploitation = child.wins/child.visits
+            child = current.parent.child_nodes[action]
+            exploitation = child.wins/child.visits
 
-                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
+            exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
 
-                ucb[child] = exploitation + exploration
+            ucb[child] = exploitation + exploration
 
-                if ucb[child] > max_ucb:
-                    max_ucb = ucb[child]
-                    temp = child 
-            else:
-                child = current.parent.child_nodes[action]
-                exploitation = 1 - (child.wins/child.visits)
-
-                exploration = 2 * (sqrt((2 * log(child.visits))/ child.visits))
-
-                ucb[child] = exploitation + exploration
-
-                if ucb[child] < max_ucb:
-                    max_ucb = ucb[child]
-                    temp = child 
-            if turn == 1:
-                turn = 2
-            elif turn == 2:
-                turn = 1
-            current = temp
-
+            if ucb[child] > max_ucb:
+                max_ucb = ucb[child]
+                temp = child 
+        current = temp
 
     leaf_node = current
-
+    leaf_node.visits+=1
     return leaf_node
     # Hint: return leaf_node
 
 
 def expand_leaf(node, board, state):
     """ Adds a new leaf to the tree by creating a new child node for the given node.
-
     Args:
         node:   The node for which a child will be added.
         board:  The game setup.
         state:  The state of the game.
-
     Returns:    The added child node.
-
     """
 
     # Create new node from parent node
@@ -102,23 +71,18 @@ def expand_leaf(node, board, state):
     child_node = MCTSNode(parent=parent_node, parent_action=actions[0], action_list=actions)
 
     parent_node.child_nodes[actions[0]] = child_node
-
-    wins = rollout(board, board.next_state(state, actions[0])) 
-    # print("Wins: ", wins)
-    backpropagate(child_node, wins)
-
     return child_node
+
+    
     # Hint: return new_node
 
 
 def rollout(board, state):
     """ Given the state of the game, the rollout plays out the remainder randomly.
-
     Args:
         board:  The game setup.
         state:  The state of the game.
     return state/ board at the end - see who won
-
     """
 
     # Return who won this game (board or state)
@@ -163,19 +127,13 @@ def rollout(board, state):
             total_score += outcome(board.owned_boxes(rollout_state),
                                    board.points_values(rollout_state))
 
-        expectation = float(total_score) / ROLLOUTS
+        expectation = total_score
 
         # If the current move has a better average score, replace best_move and best_expectation
         if expectation > best_expectation:
             best_expectation = expectation
             best_move = move
 
-    if best_expectation > 0:
-        best_expectation = 1
-    elif best_expectation < 0:
-        best_expectation = -1
-    else:
-        best_expectation = 0
     return best_expectation
 
 
@@ -185,34 +143,27 @@ def backpropagate(node, won):
     Args:
         node:   A leaf node.
         won:    An indicator of whether the bot won or lost the game.
-
     """
-
-    # Update node.wins and node.visit
     if node.parent == None:
         node.visits += 1
         node.wins += won
         return node
     node.wins += won
     node.visits += 1
-    # print("node wins: ", node.wins)
-    return backpropagate(node.parent, won)
 
+    return backpropagate(node.parent, won)
 
 
 def think(board, state):
     """ Performs MCTS by sampling games and calling the appropriate functions to construct the game tree.
-
     Args:
         board:  The game setup.
         state:  The state of the game.
-
     Returns:    The action to be taken.
-
     """
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
-
+    i = 0
 
     most_wins = root_node
     for step in range(num_nodes):
@@ -222,15 +173,26 @@ def think(board, state):
         # Start at root
         node = root_node
 
-        leaf_node = traverse_nodes(root_node, board, state, identity_of_bot)
-        child_node = expand_leaf(leaf_node, board, state)
 
-        # print("This is child_node.wins: ", child_node.wins)
-        if child_node.wins >= 1.0 or child_node.wins <= -1.0 or child_node.wins == 0:
-            # print("Returns")
+        leaf_node = traverse_nodes(root_node, board, state, identity_of_bot)
+
+        child_node = expand_leaf(leaf_node, board, state)
+        parent_node = child_node.parent
+        actions = parent_node.untried_actions
+        wins = rollout(board, board.next_state(state, actions[0])) 
+        temp = child_node
+        temp.visits += 1
+        temp.wins += wins
+        while temp.parent !=None:
+            temp = temp.parent
+            temp.visits += 1
+            temp.wins += wins
+        
+
+        if child_node.wins >= 1.0 or child_node.wins <= -1.0 :
+            print("Returns")
             return child_node.parent_action
         root_node = child_node 
-
 
         # Do MCTS - This is all you!
 

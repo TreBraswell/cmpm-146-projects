@@ -1,8 +1,12 @@
+
 from mcts_node import MCTSNode
 from random import choice
 import random
 from math import sqrt, log
-
+#how do we improve our algorithm?
+#why does backpropagate not work?
+#The flip(i.e how do we use the function  for the opponent)
+#is rollout correct?
 num_nodes = 1000
 explore_faction = 2.
 

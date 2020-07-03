@@ -1,0 +1,3 @@
+Experiment 2:
+We ran a second experiment to test our vanilla bot against our modified bot. Both bots had equal tree sizes of 1000. 
+Again, just as with experiment 1, our bots would end up in a draw regardless of the tree sizes. We suspect this is due to lacking randomness in the move selection algorithm and a possible problem with the way the bot is traversing the tree. 

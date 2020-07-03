@@ -192,9 +192,9 @@ def think(board, state):
     
         high=-1
     #print("test2")
-    print(currenttime)
+    #print(currenttime)
     for node in root_node.child_nodes:
-        temp2=root_node.child_nodes[x]
+        temp2=root_node.child_nodes[node]
         if ((temp2.wins/temp2.visits)>high) and node!=None:
             score=(temp2.wins/temp2.visits)
             best=node

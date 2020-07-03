@@ -1,0 +1,5 @@
+Experiment 1: 
+We pitted our version of vanilla MCTS bot against 4 vanilla MCTS bots with different tree sizes to analyze the results. The first vanilla bot player had a set tree size of 100. The other vanilla bot player was tested with 4 tree sizes: 25, 50, 75, and 100.
+ Our initial guess was that the bot with the larger tree size would have an advantage over the other bot. Testing this theory, we were surprised to find that the tree size was irrelevant and the bots would end up in a draw every single time. We have come to the conclusion that for some reason the bot is not traversing the tree correctly, although we could not figure out why. Our rollout function may also be lacking some randomness causing the bots to always run the exact same game over and over again. Another interesting side note is that the vanilla bot was still able to defeat the random bot about 90%+ on average and defeat the rollout bot about 25%+ on average.
+picture link https://drive.google.com/file/d/16zwL4_rF2Df2MGGdukX5dLEXVZFbSbxm/view?usp=sharing
+note: Wins = red, Draws = light blue, Losses = yellow

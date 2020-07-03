@@ -1,0 +1,2 @@
+Teammates: Tre Braswell and Sebastian Park
+For the mcts_modified.py we changed the rollout function by creating a heuristic of the nearest coordinate. We separated this heuristic into two categories outside of the box and inside the box. Inside the box, we found the nearest node and outside the box we tried to find the nearest box. Our assumption for this approach was that closer nodes would create a path towards a win because the goal is three in a row so if we propagate them closely we will get a win.

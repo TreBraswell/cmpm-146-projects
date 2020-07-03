@@ -7,7 +7,7 @@ from math import sqrt, log
 #why does backpropagate not work?
 #The flip(i.e how do we use the function  for the opponent)
 #is rollout correct?
-num_nodes = 25
+num_nodes = 1
 explore_faction = 2.
 
 ROLLOUTS = 1000
@@ -188,7 +188,7 @@ def think(board, state):
     high=-1
 
     for node in root_node.child_nodes:
-        temp2=root_node.child_nodes[x]
+        temp2=root_node.child_nodes[node]
         if ((temp2.wins/temp2.visits)>high) and node!=None:
             score=(temp2.wins/temp2.visits)
             best=node

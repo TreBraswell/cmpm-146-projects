@@ -181,8 +181,8 @@ def think(board, state):
     i = 0
     start = time()
     currenttime = 0
-    for step in range(num_nodes):
-    #while currenttime<1:
+
+    while currenttime<1:
         # Copy the game for sampling a playthrough
         sampled_game = state
         times = time()
@@ -208,11 +208,11 @@ def think(board, state):
             temp.visits += 1
             temp.wins += wins
         root_node = temp
-    print(currenttime)
+    #print(currenttime)
     high=-1
     #print("test2")
     for node in root_node.child_nodes:
-        temp2=root_node.child_nodes[x]
+        temp2=root_node.child_nodes[node]
         if ((temp2.wins/temp2.visits)>high) and node!=None:
             score=(temp2.wins/temp2.visits)
             best=node

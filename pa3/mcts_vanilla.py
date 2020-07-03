@@ -36,40 +36,42 @@ def traverse_nodes(node, board, state, identity):
     temp = node
     max_ucb = 0
 
-    if current.visits != 0:
+    i = 0
+    for action in current.child_nodes:
+        print(i)
+        i = i +1
+        if current.child_nodes[action].visits == 0 :
+            #print(len(current.child_nodes))
+            child = current.child_nodes[action]
+            exploitation = child.wins/child.visits
 
-        for action in current.child_nodes:
-            
-            if turn == identity:
-                #print(len(current.child_nodes))
-                child = current.child_nodes[action]
-                exploitation = child.wins/child.visits
+            exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
 
-                exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
+            ucb[child] = exploitation + exploration
 
-                ucb[child] = exploitation + exploration
+            if ucb[child] > max_ucb:
+                max_ucb = ucb[child]
+                temp = child 
+        else:
+            continue
+            print("switch2")
+            child = current.child_nodes[action]
+            exploitation = 1 - (child.wins/child.visits)
 
-                if ucb[child] > max_ucb:
-                    max_ucb = ucb[child]
-                    temp = child 
-            else:
-                print("switch2")
-                child = current.child_nodes[action]
-                exploitation = 1 - (child.wins/child.visits)
+            exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
 
-                exploration = 2 * (sqrt((2 * log(child.parent.visits))/ child.visits))
+            ucb[child] = exploitation + exploration
 
-                ucb[child] = exploitation + exploration
+            if ucb[child] < max_ucb:
+                max_ucb = ucb[child]
+                temp = child 
 
-                if ucb[child] < max_ucb:
-                    max_ucb = ucb[child]
-                    temp = child 
-            if turn == 1:
-                turn = 2
-            elif turn == 2:
-                turn = 1
-            current = temp
-
+        if turn == 1:
+            turn = 2
+        elif turn == 2:
+            turn = 1
+        current = current.child_nodes[action]
+        
 
     leaf_node = current
 
@@ -95,7 +97,7 @@ def expand_leaf(node, board, state):
     state2 = board.next_state(state, actions1[0])
     actions2 = board.legal_actions(state2)
     #print(actions[0])
-    
+    print("this is the length before ",len(parent_node.child_nodes) )
     child_node = MCTSNode(parent=parent_node, parent_action=actions1[0], action_list=board.legal_actions(state2))
     try:
         parent_node.child_nodes[actions2[0]] = child_node
@@ -103,6 +105,7 @@ def expand_leaf(node, board, state):
         return child_node
         parent_node.child_nodes[actions1[0]] = child_node
         print("it broke", actions2, "also :", actions1)
+    print("this is the length after",len(parent_node.child_nodes) )
     return child_node
 
     
@@ -164,7 +167,7 @@ def think(board, state):
         # Start at root
         #print("this is the length : ",len(root_node.child_nodes))
 
-        leaf_node = traverse_nodes(root_node, board, state, identity_of_bot)
+        leaf_node = traverse_nodes(root_node, board, sampled_game, identity_of_bot)
         child_node = expand_leaf(leaf_node, board, state)
         if len(child_node.untried_actions) == 0:
             print("drawsss")

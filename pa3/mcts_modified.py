@@ -182,7 +182,7 @@ def think(board, state):
     start = time()
     currenttime = 0
 
-    while currenttime<1:
+    for step in range(num_nodes):
         # Copy the game for sampling a playthrough
         sampled_game = state
         times = time()

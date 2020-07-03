@@ -2,6 +2,7 @@
 from mcts_node import MCTSNode
 from random import choice
 import random
+from timeit import default_timer as time
 from math import sqrt, log
 #how do we improve our algorithm?
 #why does backpropagate not work?
@@ -178,11 +179,13 @@ def think(board, state):
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
     i = 0
-
-    for step in range(num_nodes):
+    start = time()
+    currenttime = 0
+    while currenttime<1:
         # Copy the game for sampling a playthrough
         sampled_game = state
-
+        times = time()
+        currenttime = times -start
         # Start at root
         #print("this is the length : ",len(root_node.child_nodes))
 
@@ -203,18 +206,14 @@ def think(board, state):
             temp = temp.parent
             temp.visits += 1
             temp.wins += wins
-        
         root_node = temp
-    
-    highscore=-1
+    print(currenttime)
+    high=-1
     #print("test2")
-    for x in root_node.child_nodes:
+    for node in root_node.child_nodes:
         temp2=root_node.child_nodes[x]
-        if ((temp2.wins/temp2.visits)>highscore) and x!=None:
-            highscore=(temp2.wins/temp2.visits)
-            bestAction=x
+        if ((temp2.wins/temp2.visits)>high) and node!=None:
+            score=(temp2.wins/temp2.visits)
+            best=node
 
-        # Do MCTS - This is all you!
-    # Return an action, typically the most frequently used action (from the root) or the action with the best
-    # estimated win rate.
-    return bestAction 
+    return best

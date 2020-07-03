@@ -185,15 +185,13 @@ def think(board, state):
         
         root_node = temp
     
-    highscore=-1
-    #print("test2")
-    for x in root_node.child_nodes:
+    high=-1
+
+    for node in root_node.child_nodes:
         temp2=root_node.child_nodes[x]
-        if ((temp2.wins/temp2.visits)>highscore) and x!=None:
-            highscore=(temp2.wins/temp2.visits)
-            bestAction=x
+        if ((temp2.wins/temp2.visits)>high) and node!=None:
+            score=(temp2.wins/temp2.visits)
+            best=node
 
         # Do MCTS - This is all you!
-    # Return an action, typically the most frequently used action (from the root) or the action with the best
-    # estimated win rate.
-    return bestAction 
+    return best

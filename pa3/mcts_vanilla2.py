@@ -7,7 +7,7 @@ from math import sqrt, log
 #why does backpropagate not work?
 #The flip(i.e how do we use the function  for the opponent)
 #is rollout correct?
-num_nodes = 10
+num_nodes = 25
 explore_faction = 2.
 
 ROLLOUTS = 1000
@@ -122,31 +122,10 @@ def rollout(board, state):
     # board.is_ended(state) == true when over
     # Same as Rollout bot, can basically copy/paste
     # pass
-    if not  board.is_ended(state):
-        prevmov = board.legal_actions(state)[0]
-        nextmove = prevmov
-        predistance = float('inf')
+
     while not  board.is_ended(state):
-        predistance = float('inf')
-
-        for move  in board.legal_actions(state):
-            if move == prevmov:
-
-                continue
-            x1 = move[2]
-            x2 = prevmov[2]
-            y1 = move[3]
-            y2 = prevmov[3]
-            if prevmov[1]!= move[1] or prevmov[0]!= move[0]:
-                distance = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2 + (move[0] - prevmov[0]) ** 2 + (move[1] - prevmov[1]) ** 2) * 0.5
-            else:
-                distance = sqrt((x1 - x2) ** 2 + (y2 - y1) ** 2) * 0.5
-                
-            if predistance >distance:
-                predistance = distance
-                nextmove = move
-        prevmov = nextmove
-        state = board.next_state(state,nextmove)
+        move = random.choice(board.legal_actions(state))
+        state = board.next_state(state,move)
 
     return board.current_player(state)
 
@@ -178,7 +157,7 @@ def think(board, state):
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None, action_list=board.legal_actions(state))
     i = 0
-
+    #print("my name jeff")
     for step in range(num_nodes):
         # Copy the game for sampling a playthrough
         sampled_game = state
@@ -189,7 +168,7 @@ def think(board, state):
         leaf_node = traverse_nodes(root_node, board, sampled_game, identity_of_bot)
         child_node = expand_leaf(leaf_node, board, state)
         if len(child_node.untried_actions) == 0:
-            print("drawsss")
+            #print("drawsss")
             bestAction = child_node.parent_action
             break
         parent_node = child_node.parent

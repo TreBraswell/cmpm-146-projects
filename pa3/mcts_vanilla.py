@@ -7,11 +7,9 @@ from math import sqrt, log
 #why does backpropagate not work?
 #The flip(i.e how do we use the function  for the opponent)
 #is rollout correct?
-num_nodes = 10
+num_nodes = 100
 explore_faction = 2.
 
-ROLLOUTS = 1000
-MAX_DEPTH = 5
 
 def traverse_nodes(node, board, state, identity):
     """ Traverses the tree until the end criterion are met.

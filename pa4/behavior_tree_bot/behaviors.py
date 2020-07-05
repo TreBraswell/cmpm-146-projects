@@ -33,6 +33,12 @@ def attack_weakest_enemy_planet(state):
 
     target_planets = iter(enemy_planets)
 
+    
+    extra_planets = enemy_planets.copy()
+
+    unused_planets = []
+
+    sizeofunused =0
     try:
         my_planet = next(my_planets)
         target_planet = next(target_planets)
@@ -42,10 +48,20 @@ def attack_weakest_enemy_planet(state):
 
             if my_planet.num_ships > required_ships:
                 issue_order(state, my_planet.ID, target_planet.ID, required_ships)
+                extra_planets.remove(target_planet)
                 my_planet = next(my_planets)
                 target_planet = next(target_planets)
             else:
+                unused_planets.append(my_planet)
                 my_planet = next(my_planets)
+        if len(extra_planets)>0:
+            logging.info('did we not attack')
+            for planet in extra_planets:
+                if planet.num_ships+1 <=len(unused_planets)*2:
+                    logging.info('this was useful')
+                    for used in unused_planets:
+                        issue_order(state, planet.ID, used.ID, 2)
+                    break
 
     except StopIteration:
         return
@@ -79,6 +95,11 @@ def spread_to_weakest_neutral_planet(state):
 
     target_planets = iter(neutral_planets)
 
+    extra_planets = neutral_planets.copy()
+
+    unused_planets = []
+
+    sizeofunused =0
     try:
         my_planet = next(my_planets)
         target_planet = next(target_planets)
@@ -87,12 +108,22 @@ def spread_to_weakest_neutral_planet(state):
             dist =state.distance(my_planet.ID, target_planet.ID) * target_planet.growth_rate + 1
             logging.info(my_planet.num_ships)
             if my_planet.num_ships-dist > required_ships:
-
                 issue_order(state, my_planet.ID, target_planet.ID, required_ships)
+                extra_planets.remove(target_planet)
                 my_planet = next(my_planets)
                 target_planet = next(target_planets)
             else:
+                unused_planets.append(my_planet)
                 my_planet = next(my_planets)
+        if len(extra_planets)>0:
+            logging.info('did we not attack')
+            for planet in extra_planets:
+                if planet.num_ships+1 <=len(unused_planets)*2:
+                    logging.info('this was useful')
+                    for used in unused_planets:
+                        issue_order(state, planet.ID, used.ID, 2)
+                    break
+                        
 
     except StopIteration:
         return

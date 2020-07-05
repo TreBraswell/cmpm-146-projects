@@ -1,4 +1,6 @@
 import sys
+import logging, traceback, sys, os, inspect
+logging.basicConfig(filename=__file__[:-3] +'.log', filemode='w', level=logging.DEBUG)
 sys.path.insert(0, '../')
 from planet_wars import issue_order
 
@@ -82,8 +84,10 @@ def spread_to_weakest_neutral_planet(state):
         target_planet = next(target_planets)
         while True:
             required_ships = target_planet.num_ships + 1
+            dist =state.distance(my_planet.ID, target_planet.ID) * target_planet.growth_rate + 1
+            logging.info(my_planet.num_ships)
+            if my_planet.num_ships-dist > required_ships:
 
-            if my_planet.num_ships > required_ships:
                 issue_order(state, my_planet.ID, target_planet.ID, required_ships)
                 my_planet = next(my_planets)
                 target_planet = next(target_planets)

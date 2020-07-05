@@ -10,5 +10,6 @@ def have_largest_fleet(state):
            > sum(planet.num_ships for planet in state.enemy_planets()) \
              + sum(fleet.num_ships for fleet in state.enemy_fleets())
 
-
+def defense_check(state):
+    return not if_neutral_planet_available(state) and not have_largest_fleet(state)
 

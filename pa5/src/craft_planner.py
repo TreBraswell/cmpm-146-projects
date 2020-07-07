@@ -83,7 +83,7 @@ def graph(state):
 def heuristic(state):
     # Implement your heuristic here!
     return 0
-    
+
 def dijkstras_shortest_path(initial_position, destination, graph, adj):
     """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
 
@@ -139,11 +139,12 @@ def dijkstras_shortest_path(initial_position, destination, graph, adj):
 def search(graph, state, is_goal, limit, heuristic):
 
     start_time = time()
-
+    print("this is state: ", state)
     # Implement your search here! Use your heuristic here!
     # When you find a path to the goal return a list of tuples [(state, action)]
     # representing the path. Each element (tuple) of the list represents a state
     # in the path and the action that took you to this state
+    '''
     while time() - start_time < limit:
         pass
 
@@ -151,6 +152,7 @@ def search(graph, state, is_goal, limit, heuristic):
     print(time() - start_time, 'seconds.')
     print("Failed to find a path from", state, 'within time limit.')
     return None
+    '''
 
 if __name__ == '__main__':
     with open('Crafting.json') as f:

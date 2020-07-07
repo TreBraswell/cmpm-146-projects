@@ -1,7 +1,7 @@
 import json
 from collections import namedtuple, defaultdict, OrderedDict
 from timeit import default_timer as time
-
+from heapq import heappop, heappush
 Recipe = namedtuple('Recipe', ['name', 'check', 'effect', 'cost'])
 
 
@@ -37,7 +37,7 @@ def make_checker(rule):
     # Implement a function that returns a function to determine whether a state meets a
     # rule's requirements. This code runs once, when the rules are constructed before
     # the search is attempted.
-
+    #for loop that looks at each item then checks whether their in thier or we can use find
     def check(state):
         # This code is called by graph(state) and runs millions of times.
         # Tip: Do something with rule['Consumes'] and rule['Requires'].
@@ -84,46 +84,40 @@ def heuristic(state):
     # Implement your heuristic here!
     return 0
     
-def dijkstras_shortest_path(initial_position, destination, graph, adj):
-    """ Searches for a minimal cost path through a graph using Dijkstra's algorithm.
+def search(graph, state, is_goal, limit, heuristic):
 
-    Args:
-        initial_position: The initial cell from which the path extends.
-        destination: The end location for the path.
-        graph: A loaded level, containing walls, spaces, and waypoints.
-        adj: An adjacency function returning cells adjacent to a given cell as well as their respective edge costs.
-
-    Returns:
-        If a path exits, return a list containing all cells from initial_position to destination.
-        Otherwise, return None.
-
-"""
+    start_time = time()
     frontier = [] # our queue which we interpret  as a priority queue
-    heappush(frontier, (0,initial_position) ) #putting our instial position with its cost
+    heappush(frontier, (0,state) ) #putting our instial position with its cost
     came_from = {} # where we have been
     cost_so_far = {} #the cost so far
-    came_from[initial_position] = 0 #just setting up the intial destination
-    cost_so_far[initial_position] = 0 #where were starting
+    came_from[state] = 0 #just setting up the intial destination
+    cost_so_far[state] = 0 #where were starting
     done = 0
-    while frontier:
+    # Implement your search here! Use your heuristic here!
+    # When you find a path to the goal return a list of tuples [(state, action)]
+    # representing the path. Each element (tuple) of the list represents a state
+    # in the path and the action that took you to this state
+    while time() - start_time < limit and frontier:
+
         current = heappop(frontier) # gets lowest priority
-        if current[1] == destination: # if it equals our goal destnation
+        if is_goal(current): # if it equals our goal destnation
             done = 1
             break
-        adjacents = adj(graph,current[1])# reset which variables were going to look at
-     #adj = navigation_edges(
 
-        for next in adjacents: # for all elements in adjacent to it
-            if next[0] in cost_so_far.keys():
-                if (next[1]+cost_so_far[current[1]]) <cost_so_far[next[0]]:
-                    cost_so_far[next[0]] = next[1] +cost_so_far[current[1]]
-                    came_from[next[0]] = current[1]
+        for next in graph(state): # for all elements in adjacent to it
+            if next[1] in cost_so_far.keys():
+                if next[2]+cost_so_far[current] <cost_so_far[next[1]]:
+                    cost_so_far[next[1]] = next[2] +cost_so_far[current]
+                    came_from[next[1]] = current
             else:
-                cost_so_far[next[0]] =  next[1] +cost_so_far[current[1]]
-                came_from[next[0]] = current[1]
-                priority = cost_so_far[next[0]]
-                heappush(frontier,(priority,next[0]))
-    if done == 1:
+                print(next)
+                temp = cost_so_far[next[1]]
+                cost_so_far[next[1]] =  next[2] +cost_so_far[current]
+                came_from[next[1]] = current
+                priority = cost_so_far[next[1]]
+                heappush(frontier,(priority,next[1]))
+    """if done == 1:
 
         goback = []
         current = destination
@@ -131,26 +125,14 @@ def dijkstras_shortest_path(initial_position, destination, graph, adj):
             goback.insert(0,current)
             #print("test")
             current = came_from[current]
-        return goback
-    return None
-    pass
+        return goback"""
 
 
-def search(graph, state, is_goal, limit, heuristic):
-
-    start_time = time()
-
-    # Implement your search here! Use your heuristic here!
-    # When you find a path to the goal return a list of tuples [(state, action)]
-    # representing the path. Each element (tuple) of the list represents a state
-    # in the path and the action that took you to this state
-    while time() - start_time < limit:
-        pass
-
-    # Failed to find a path
+    # Failed to find a path 
     print(time() - start_time, 'seconds.')
     print("Failed to find a path from", state, 'within time limit.')
     return None
+    pass
 
 if __name__ == '__main__':
     with open('Crafting.json') as f:
@@ -181,8 +163,9 @@ if __name__ == '__main__':
 
     # Initialize first state from initial inventory
     state = State({key: 0 for key in Crafting['Items']})
+    print("this is state : ",state)
     state.update(Crafting['Initial'])
-
+    print("this is state : ",state)
     # Search for a solution
     resulting_plan = search(graph, state, is_goal, 5, heuristic)
 

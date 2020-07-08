@@ -156,10 +156,14 @@ if __name__ == '__main__':
     #
     # # Dict of crafting recipes (each is a dict):
     # print('Example recipe:','craft stone_pickaxe at bench ->',Crafting['Recipes']['craft stone_pickaxe at bench'])
+    goal_item_min_cost = {}
 
     # Build rules
     all_recipes = []
     for name, rule in Crafting['Recipes'].items():
+        product = rule['Produces'】.values()[0]
+        if product in Crafting['Goal'] and (product not in goal_item_min_cost or rule['time'] < goal_item_min_cost[product]):
+            goal_item_min_cost[product] =  {"time":rule['Time'], "Requires":rule['Requires'], "Consumes"::rule['Consumes']}
         checker = make_checker(rule)
         effector = make_effector(rule)
         recipe = Recipe(name, checker, effector, rule['Time'])

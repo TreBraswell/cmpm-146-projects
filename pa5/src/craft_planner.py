@@ -41,7 +41,22 @@ def make_checker(rule):
     def check(state):
         # This code is called by graph(state) and runs millions of times.
         # Tip: Do something with rule['Consumes'] and rule['Requires'].
-        return True
+        #if we can look at requiremntes
+        if 'Consumes' in rule:
+            for (item, atm) in rule['Consumes'].items():
+                if item in state and state[item] == atm:
+                    continue
+                else:
+                    return False
+            if 'Requires' in rule :
+                #loop for each item in our state
+                for (item, atm) in rule['Requires'].items():
+                    if item in state:
+                        continue
+                    else:
+                        return False
+                return True
+        return False
 
     return check
 

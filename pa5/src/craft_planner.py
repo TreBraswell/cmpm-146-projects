@@ -44,19 +44,18 @@ def make_checker(rule):
         #if we can look at requiremntes
         if 'Consumes' in rule:
             for (item, atm) in rule['Consumes'].items():
-                if item in state and state[item] == atm:
+                if state[item] >= atm:
                     continue
                 else:
                     return False
-            if 'Requires' in rule :
-                #loop for each item in our state
-                for (item, atm) in rule['Requires'].items():
-                    if item in state:
-                        continue
-                    else:
-                        return False
-                return True
-        return False
+        if 'Requires' in rule :
+            #loop for each item in our state
+            for (item, bool) in rule['Requires'].items():
+                if state[item]>=1:
+                    continue
+                else:
+                    return False
+        return True
 
     return check
 
@@ -87,11 +86,47 @@ def make_goal_checker(goal):
     def is_goal(state):
         # This code is used in the search process and may be called millions of times.
         for (item, atm) in goal.items():
-            if item not in state or state[item] < atm:
+            if state[item] < atm:
                 return False
         return True
 
     return is_goal
+
+def make_heuristic(goal):
+    # Implement a function that returns a function which checks if the state has
+    # met the goal criteria. This code runs once, before the search is attempted.
+    def heuristic(state, recipe):
+        # This code is used in the search process and may be called millions of times.
+        tools = {"", "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe", "iron_axe"}
+        cost = 0
+        if is_goal(state):
+            return 0
+        for (item, amt) in state.items():
+            if item in tools and amt>1:
+                return -1
+            if amt>8:
+                return -1
+        cur_tool = 0
+        for (index, tool) in enumerate(tools, start=1):
+            if state[tool] == 1:
+                cur_tool = index
+            else:
+                break
+
+
+        '''
+        for (item, val) in goal_item_min_cost.items():
+            diff = state[item] - val['amount']
+            if diff>0:
+                cost += diff * val['time']
+                print("missing ", item, ",add", cost)
+                for (item2, amt2) in val['Consumes']:
+                    diff2 = state[item2] - amt2
+                    if diff2>0:
+                        cost+=diff * diff2
+        '''
+        return cost
+    return heuristic
 
 
 def graph(state):
@@ -100,12 +135,14 @@ def graph(state):
     # to the given state, and the cost for the rule.
     for r in all_recipes:
         if r.check(state):
+            #print("graph:",r.name, r.effect(state), r.cost)
             yield (r.name, r.effect(state), r.cost)
 
-
+'''
 def heuristic(state):
     # Implement your heuristic here!
     return 0
+'''
 
 def search(graph, state, is_goal, limit, heuristic):
 
@@ -117,29 +154,41 @@ def search(graph, state, is_goal, limit, heuristic):
     came_from[state] = 0 #just setting up the intial destination
     cost_so_far[state] = 0 #where were starting
     done = 0
+    counter = 0
     # Implement your search here! Use your heuristic here!
     # When you find a path to the goal return a list of tuples [(state, action)]
     # representing the path. Each element (tuple) of the list represents a state
     # in the path and the action that took you to this state
-    while time() - start_time < limit and frontier:
+    while frontier:
 
         (cur_cost, current) = heappop(frontier) # gets lowest priority
+        print("current cost", cur_cost)
         if is_goal(current): # if it equals our goal destnation
+            print("final state:", current, "final cost:", cur_cost)
+            destination = current
             done = 1
             break
-
-        for next in graph(state): # for all elements in adjacent to it
+        print("loop "+str(counter), ", cobble:", state["cobble"])
+        counter+=1
+        for next in graph(current): # for all elements in adjacent to it
+            h = heuristic(next[1], next[0])
+            if h == (-1):
+                continue
             if next[1] in cost_so_far.keys():
                 if next[2]+cur_cost <cost_so_far[next[1]]:
                     cost_so_far[next[1]] = next[2] +cur_cost
                     came_from[next[1]] = current
             else:
-                print(next)
                 cost_so_far[next[1]] = next[2] +cur_cost
                 came_from[next[1]] = current
-                priority = cost_so_far[next[1]]
+                priority = cost_so_far[next[1]] + h
+                print("priority", priority, "cost so far", cur_cost, "recipe cost", next[2])
+                print("recipe name", next[0])
+                print("cobble:", next[1]["cobble"])
                 heappush(frontier,(priority,next[1]))
-    """if done == 1:
+                #print("pushed", next)
+
+    if done == 1:
 
         goback = []
         current = destination
@@ -147,14 +196,21 @@ def search(graph, state, is_goal, limit, heuristic):
             goback.insert(0,current)
             #print("test")
             current = came_from[current]
-        return goback"""
+        print("final length", len(goback))
 
-
-    # Failed to find a path
     print(time() - start_time, 'seconds.')
-    print("Failed to find a path from", state, 'within time limit.')
-    return None
-    pass
+    if done == 1: # if it equals our goal destnation
+        print("success")
+    else:
+    # Failed to find a path
+        print("Failed to find a path from", state, 'within time limit.')
+        return None
+
+def get_relevent_items(goal):
+    init = goal.keys()
+    result = []
+    for r in all_recipes:
+        if r['']
 
 if __name__ == '__main__':
     with open('Crafting.json') as f:
@@ -176,17 +232,19 @@ if __name__ == '__main__':
     # Build rules
     all_recipes = []
     for name, rule in Crafting['Recipes'].items():
-        product = rule['Produces'】.values()[0]
+        """
+        product = rule['Produces'].keys()[0]
+        print("product", product)
         if product in Crafting['Goal'] and (product not in goal_item_min_cost or rule['time'] < goal_item_min_cost[product]):
-            goal_item_min_cost[product] =  {"time":rule['Time'], "Requires":rule['Requires'], "Consumes"::rule['Consumes']}
+            goal_item_min_cost[product] =  {"amount":Crafting['Goal'][product], "time":rule['Time'], "Consumes":rule['Consumes']}
+        """
         checker = make_checker(rule)
         effector = make_effector(rule)
         recipe = Recipe(name, checker, effector, rule['Time'])
         all_recipes.append(recipe)
-
     # Create a function which checks for the goal
     is_goal = make_goal_checker(Crafting['Goal'])
-
+    heuristic = make_heuristic(Crafting['Goal'])
     # Initialize first state from initial inventory
     state = State({key: 0 for key in Crafting['Items']})
     state.update(Crafting['Initial'])

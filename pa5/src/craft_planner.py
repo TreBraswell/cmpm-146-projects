@@ -97,7 +97,8 @@ def make_heuristic(goal):
     # met the goal criteria. This code runs once, before the search is attempted.
     def heuristic(state, recipe):
         # This code is used in the search process and may be called millions of times.
-        tools = {"", "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe", "iron_axe"}
+        tools = ["", "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe", "iron_axe"]
+        crafttools = ["craft bench","craft wooden_pickaxe at bench","craft wooden_axe at bench","craft stone_pickaxe at bench","craft stone_axe at bench","craft furnace at bench","craft iron_pickaxe at bench","craft iron_axe at bench"]
         cost = 0
         if is_goal(state):
             return 0
@@ -107,13 +108,20 @@ def make_heuristic(goal):
             if amt>8:
                 return -1
         cur_tool = 0
-        for (index, tool) in enumerate(tools, start=1):
+        for (index, tool) in enumerate(tools, start=0):
+            if tool =="":
+                continue
             if state[tool] == 1:
                 cur_tool = index
             else:
                 break
-
-
+        if cur_tool +1 != len(tools):
+            var1 =recipe['Produces'].keys()
+            var2 = Crafting['Recipes'][crafttools[cur_tool]]
+            if var1[0] in var2['Consumes']: 
+                cost = len(tools) - (cur_tool+1)
+            else:
+                cost = len(tools) - (cur_tool)
         '''
         for (item, val) in goal_item_min_cost.items():
             diff = state[item] - val['amount']
@@ -206,11 +214,11 @@ def search(graph, state, is_goal, limit, heuristic):
         print("Failed to find a path from", state, 'within time limit.')
         return None
 
-def get_relevent_items(goal):
+"""def get_relevent_items(goal):
     init = goal.keys()
     result = []
     for r in all_recipes:
-        if r['']
+        if r['']"""
 
 if __name__ == '__main__':
     with open('Crafting.json') as f:

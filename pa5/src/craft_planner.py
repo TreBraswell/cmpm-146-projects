@@ -104,9 +104,9 @@ def make_heuristic(goal_item_min_cost):
             return 0
         for (item, amt) in state.items():
             if item in tools and amt>1:
-                return -1
+                return -2
             if amt>8:
-                return -1
+                return -2
         cur_tool = 0
         for (index, tool) in enumerate(tools, start=0):
             if tool =="":
@@ -122,6 +122,7 @@ def make_heuristic(goal_item_min_cost):
                 cost = len(tools) - (cur_tool+1)
             else:
                 cost = len(tools) - (cur_tool)
+
         for (item, val) in goal_item_min_cost.items():
             diff = state[item] - val['amount']
             if diff>0:
@@ -176,7 +177,7 @@ def search(graph, state, is_goal, limit, heuristic):
         counter+=1
         for next in graph(current): # for all elements in adjacent to it
             h = heuristic(next[1], next[0])
-            if h == (-1):
+            if h == -2:
                 continue
             if next[1] in cost_so_far:
                 if next[2]+cur_cost <cost_so_far[next[1]]:

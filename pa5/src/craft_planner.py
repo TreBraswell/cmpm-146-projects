@@ -96,58 +96,65 @@ def make_goal_checker(goal):
 def make_heuristic(goal, recipes, goal_item_min_cost):
     # Implement a function that returns a function which checks if the state has
     # met the goal criteria. This code runs once, before the search is attempted.
-    start_time = time()
+    '''
+    materials = ["planck","cobble", "ingot"]
+    materail_to_tool = {"planck":["bench","wooden_axe"], "cobble":["wooden_pickaxe","stone_pickaxe"], "ingot": ["iron_pickaxe", "furnace"]}
+    for product in goal_item_min_cost['Consumes']:
+        if product in materials
+    '''
     products = set(goal.keys())
     observed = set()
     required_tools = set()
+    required_materails = set()
     while products:
         components = set()
         for r in recipes.values():
             product = r['Produces'].keys()[0]
             if product not in observed and product in products:
                 if "Consumes" in r:
+                    required_materails.update(r['Consumes'].keys())
                     components.update(r['Consumes'].keys())
                 if "Requires" in r:
                     required_tools.update(r['Requires'].keys())
                     components.update(r['Requires'].keys())
         observed.update(products)
         products = components
-    print("required tools", required_tools)
+    required_tools = required_tools
+    print("required_materails", required_materails)
+
 
     def heuristic(state, recipe_name):
         # This code is used in the search process and may be called millions of times.
-        tools = ["", "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe", "iron_axe"]
-        #crafttools = ["craft bench","craft wooden_pickaxe at bench","craft wooden_axe at bench","craft stone_pickaxe at bench","craft stone_axe at bench","craft furnace at bench","craft iron_pickaxe at bench","craft iron_axe at bench"]
+        tools = [ "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe"]
+        crafttools = ["craft bench","craft wooden_pickaxe at bench","craft wooden_axe at bench","craft stone_pickaxe at bench","craft stone_axe at bench","craft furnace at bench","craft iron_pickaxe at bench"]
         cost = 0
         new_item = recipes[recipe_name]['Produces'].keys()[0]
+        #print("new_item",new_item)
+        if new_item == "iron_axe":
+            return -1
+        if new_item in tools and state[new_item] >1:
+            return -1
+        limit = max(goal[new_item], 8) if new_item in goal else 8
+        if state[new_item] > limit:
+            return -1
         if is_goal(state):
             return 0
-        for (item, amt) in state.items():
-            if item in tools and amt>1:
-                return -1
-            if new_item == item:
-                limit = max(goal[item], 8) if item in goal else 8
-                if amt > limit:
-                    return -1
+
         for tool in required_tools:
             if state[tool] == 0:
-                cost+=1;
+                cost+=1
+        
+
         '''
-        cur_tool = 0
-        for (index, tool) in enumerate(tools, start=0):
-            if tool =="":
-                continue
-            if state[tool] == 1:
-                cur_tool = index
+        if new_item not in required_materails and new_item not in required_tools:
+            print("discouraging",new_item )
+            cost += 1
             else:
-                break
-        if cur_tool +1 != len(tools):
-            var1 =recipe['Produces'].keys()
-            var2 = Crafting['Recipes'][crafttools[cur_tool]]
-            if var1[0] in var2['Consumes']:
-                cost = len(tools) - (cur_tool+1)
-            else:
-                cost = len(tools) - (cur_tool)
+                cur_tool +=1
+        var2 = recipes[crafttools[tools.index(required_tools[cur_tool])]]
+        if new_item not in var2['Consumes']:
+            print("discouraging",new_item )
+            cost += 1
         '''
         for (item, val) in goal_item_min_cost.items():
             diff = state[item] - val['required_amt']
@@ -195,7 +202,7 @@ def search(graph, state, is_goal, limit, heuristic):
 
         (_, current) = heappop(frontier) # gets lowest priority
         cur_cost = cost_so_far[current]
-        print("current cost", cur_cost)
+        #print("current cost", cur_cost)
         if is_goal(current): # if it equals our goal destnation
             print("final state:", current, "final cost:", cur_cost)
             done = 1
@@ -205,7 +212,7 @@ def search(graph, state, is_goal, limit, heuristic):
                 current = came_from[current]
             print("final length", len(goback))
             break
-        print("loop "+str(counter))
+        #print("loop "+str(counter))
         counter+=1
         for next in graph(current): # for all elements in adjacent to it
             h = heuristic(next[1], next[0])
@@ -219,8 +226,8 @@ def search(graph, state, is_goal, limit, heuristic):
                 cost_so_far[next[1]] = next[2] +cur_cost
                 came_from[next[1]] = current
                 priority = cost_so_far[next[1]] + h
-                print("priority", priority, "cost so far", cur_cost, "recipe cost", next[2])
-                print("recipe name", next[0])
+                #print("priority", priority, "cost so far", cur_cost, "recipe cost", next[2])
+                #print("recipe name", next[0])
                 heappush(frontier,(priority,next[1]))
                 #print("pushed", next)
 
@@ -261,7 +268,6 @@ if __name__ == '__main__':
     all_recipes = []
     for name, rule in Crafting['Recipes'].items():
         (product, amt) = rule['Produces'].items()[0]
-        print("product", product)
         if product in Crafting['Goal'] and (product not in goal_item_min_cost or rule['time'] < goal_item_min_cost[product]):
             goal_item_min_cost[product] =  {"produced_amt":amt, "required_amt":Crafting['Goal'][product], "time":rule['Time'], "Requires":rule['Requires'], "Consumes":rule['Consumes']}
         checker = make_checker(rule)

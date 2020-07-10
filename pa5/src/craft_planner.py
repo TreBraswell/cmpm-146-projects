@@ -105,45 +105,80 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
     products = set(goal.keys())
     observed = set()
     required_tools = set()
-    required_materails = set()
+    required_materials= set()
     while products:
         components = set()
         for r in recipes.values():
-            product = r['Produces'].keys()[0]
+            product = next(iter(rule['Produces'].keys()))
             if product not in observed and product in products:
                 if "Consumes" in r:
-                    required_materails.update(r['Consumes'].keys())
                     components.update(r['Consumes'].keys())
                 if "Requires" in r:
                     required_tools.update(r['Requires'].keys())
                     components.update(r['Requires'].keys())
         observed.update(products)
         products = components
-    required_tools = required_tools
-    print("required_materails", required_materails)
-
+    limits = { "bench":1,
+               "cart":0,
+               "coal":1,
+               "cobble":8,
+               "furnace":1,
+               "ingot":8,
+               "iron_axe":0,
+               "iron_pickaxe":1,
+               "ore":1,
+               "plank":8,
+               "rail":16,
+               "stick":8,
+               "stone_axe":1,
+               "stone_pickaxe":1,
+               "wood":1,
+               "wooden_axe":1,
+               "wooden_pickaxe":1
+              }
+    for item in limits:
+        if item in goal and goal[item]>limits[item]:
+            limits[item] = goal[item]
+    print("limits", limits)
+    axes = ["wooden_axe", "stone_axe", "iron_axe"]
+    pickaxes = ["wooden_pickaxe", "stone_pickaxe", "iron_pickaxe"]
 
     def heuristic(state, recipe_name):
         # This code is used in the search process and may be called millions of times.
-        tools = [ "bench","wooden_pickaxe", "wooden_axe", "stone_pickaxe", "stone_axe", "furnace", "iron_pickaxe"]
-        crafttools = ["craft bench","craft wooden_pickaxe at bench","craft wooden_axe at bench","craft stone_pickaxe at bench","craft stone_axe at bench","craft furnace at bench","craft iron_pickaxe at bench"]
+        #crafttools = ["craft bench","craft wooden_pickaxe at bench","craft wooden_axe at bench","craft stone_pickaxe at bench","craft stone_axe at bench","craft furnace at bench","craft iron_pickaxe at bench"]
         cost = 0
-        new_item = recipes[recipe_name]['Produces'].keys()[0]
+        new_item = next(iter(recipes[recipe_name]['Produces'].keys()))
         #print("new_item",new_item)
+
+        '''
         if new_item == "iron_axe":
             return -1
-        if new_item in tools and state[new_item] >1:
+        if (new_item in tools or new_item in fast_moving_goods) and state[new_item] >1:
             return -1
         limit = max(goal[new_item], 8) if new_item in goal else 8
+        print("limit", max(goal['rail'], 8))
         if state[new_item] > limit:
+            return -1
+        '''
+        if state[new_item] > limits[new_item]:
             return -1
         if is_goal(state):
             return 0
+        if 'Requires' in recipes[recipe_name]:
+            tool = next(iter(recipes[recipe_name]['Requires'].keys()))
+            if tool == "wooden_axe" and (state['stone_axe'] >=1 or state['iron_axe'] >=1):
+                return -1
+            if tool == "stone_axe" and state['iron_axe'] >=1:
+                return -1
+            if tool == "wooden_pickaxe" and (state['stone_pickaxe'] >=1 or state['iron_pickaxe'] >=1):
+                return -1
+            if tool == "stone_pickaxe" and state['iron_pickaxe'] >=1:
+                return -1
 
         for tool in required_tools:
             if state[tool] == 0:
                 cost+=1
-        
+
 
         '''
         if new_item not in required_materails and new_item not in required_tools:
@@ -157,16 +192,15 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
             cost += 1
         '''
         for (item, val) in goal_item_min_cost.items():
-            diff = state[item] - val['required_amt']
+            diff = val['required_amt']- state[item]
             if diff>0:
-                diff = math.ceil(diff/val['produced_amt'])
+                diff = ceil(float(diff)/val['produced_amt'])
                 cost += diff * val['time']
-                print("missing ", item, ",add", cost)
-                for (item2, amt2) in val['Consumes']:
+                for (item2, amt2) in val['Consumes'].items():
                     diff2 = state[item2] - amt2
                     if diff2>0:
                         cost+=diff * diff2
-                for (item2, _) in val['Requires']:
+                for (item2, _) in val['Requires'].items():
                     if state[item2] == 0:
                         cost+=1
         return cost
@@ -177,9 +211,9 @@ def graph(state):
     # Iterates through all recipes/rules, checking which are valid in the given state.
     # If a rule is valid, it returns the rule's name, the resulting state after application
     # to the given state, and the cost for the rule.
+    list = []
     for r in all_recipes:
         if r.check(state):
-            #print("graph:",r.name, r.effect(state), r.cost)
             yield (r.name, r.effect(state), r.cost)
 
 
@@ -227,7 +261,7 @@ def search(graph, state, is_goal, limit, heuristic):
                 came_from[next[1]] = current
                 priority = cost_so_far[next[1]] + h
                 #print("priority", priority, "cost so far", cur_cost, "recipe cost", next[2])
-                #print("recipe name", next[0])
+                print("recipe name", next[0])
                 heappush(frontier,(priority,next[1]))
                 #print("pushed", next)
 
@@ -267,7 +301,8 @@ if __name__ == '__main__':
     # Build rules
     all_recipes = []
     for name, rule in Crafting['Recipes'].items():
-        (product, amt) = rule['Produces'].items()[0]
+        product = next(iter(rule['Produces'].keys()))
+        amt = next(iter(rule['Produces'].values()))
         if product in Crafting['Goal'] and (product not in goal_item_min_cost or rule['time'] < goal_item_min_cost[product]):
             goal_item_min_cost[product] =  {"produced_amt":amt, "required_amt":Crafting['Goal'][product], "time":rule['Time'], "Requires":rule['Requires'], "Consumes":rule['Consumes']}
         checker = make_checker(rule)
@@ -281,7 +316,6 @@ if __name__ == '__main__':
     # Initialize first state from initial inventory
     state = State({key: 0 for key in Crafting['Items']})
     state.update(Crafting['Initial'])
-    print("this is state : ", str(state))
     # Search for a solution
     resulting_plan = search(graph, state, is_goal, 5, heuristic)
 

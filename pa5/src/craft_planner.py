@@ -128,8 +128,8 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
                "iron_pickaxe":1,
                "ore":1,
                "plank":8,
-               "rail":16,
-               "stick":8,
+               "rail":0,
+               "stick":4,
                "stone_axe":1,
                "stone_pickaxe":1,
                "wood":1,
@@ -139,7 +139,6 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
     for item in limits:
         if item in goal and goal[item]>limits[item]:
             limits[item] = goal[item]
-    print("limits", limits)
     axes = ["wooden_axe", "stone_axe", "iron_axe"]
     pickaxes = ["wooden_pickaxe", "stone_pickaxe", "iron_pickaxe"]
 
@@ -149,7 +148,7 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
         cost = 0
         new_item = next(iter(recipes[recipe_name]['Produces'].keys()))
         #print("new_item",new_item)
-
+        new_amt = next(iter(recipes[recipe_name]['Produces'].values()))
         '''
         if new_item == "iron_axe":
             return -1
@@ -160,13 +159,18 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
         if state[new_item] > limit:
             return -1
         '''
-        if state[new_item] > limits[new_item]:
-            return -1
         if is_goal(state):
             return 0
+        if state[new_item] > limits[new_item]:
+            return -1
+        #if state["furnace"]>=1 and 
+
+        if recipe_name == "punch for wood" and (state['stone_axe'] >=1 or state['iron_axe'] >=1 or  state['wooden_axe'] >=1 ):
+            return -1
         if 'Requires' in recipes[recipe_name]:
             tool = next(iter(recipes[recipe_name]['Requires'].keys()))
             if tool == "wooden_axe" and (state['stone_axe'] >=1 or state['iron_axe'] >=1):
+
                 return -1
             if tool == "stone_axe" and state['iron_axe'] >=1:
                 return -1
@@ -196,13 +200,15 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
             if diff>0:
                 diff = ceil(float(diff)/val['produced_amt'])
                 cost += diff * val['time']
-                for (item2, amt2) in val['Consumes'].items():
-                    diff2 = state[item2] - amt2
-                    if diff2>0:
-                        cost+=diff * diff2
-                for (item2, _) in val['Requires'].items():
-                    if state[item2] == 0:
-                        cost+=1
+                """if 'Consumes' in val:
+                    for (item2, amt2) in val['Consumes'].items():
+                        diff2 = state[item2] - amt2
+                        if diff2>0:
+                            cost+=diff * diff2
+                if 'Requires' in val:
+                    for (item2, _) in val['Requires'].items():
+                        if state[item2] == 0:
+                            cost+=1"""
         return cost
     return heuristic
 
@@ -224,7 +230,7 @@ def search(graph, state, is_goal, limit, heuristic):
     heappush(frontier, (0,state) ) #putting our instial position with its cost
     came_from = {} # where we have been
     cost_so_far = {} #the cost so far
-    came_from[state] = 0 #just setting up the intial destination
+    came_from[state] = (0,0) #just setting up the intial destination
     cost_so_far[state] = 0 #where were starting
     done = 0
     counter = 0
@@ -238,13 +244,16 @@ def search(graph, state, is_goal, limit, heuristic):
         cur_cost = cost_so_far[current]
         #print("current cost", cur_cost)
         if is_goal(current): # if it equals our goal destnation
-            print("final state:", current, "final cost:", cur_cost)
             done = 1
             goback = []
-            while current != 0:
+            current = (current,0)
+            while current[0] != 0:
                 goback.insert(0,current)
-                current = came_from[current]
-            print("final length", len(goback))
+                current = came_from[current[0]]
+            goback.pop()
+            print(goback)
+            print("final length:", len(goback))
+            print("final cost:", cur_cost)
             break
         #print("loop "+str(counter))
         counter+=1
@@ -255,13 +264,13 @@ def search(graph, state, is_goal, limit, heuristic):
             if next[1] in cost_so_far:
                 if next[2]+cur_cost <cost_so_far[next[1]]:
                     cost_so_far[next[1]] = next[2] +cur_cost
-                    came_from[next[1]] = current
+                    came_from[next[1]] = (current,next[0])
             else:
                 cost_so_far[next[1]] = next[2] +cur_cost
-                came_from[next[1]] = current
+                came_from[next[1]] = (current,next[0])
                 priority = cost_so_far[next[1]] + h
                 #print("priority", priority, "cost so far", cur_cost, "recipe cost", next[2])
-                print("recipe name", next[0])
+                #print("recipe name", next[0])
                 heappush(frontier,(priority,next[1]))
                 #print("pushed", next)
 
@@ -304,13 +313,12 @@ if __name__ == '__main__':
         product = next(iter(rule['Produces'].keys()))
         amt = next(iter(rule['Produces'].values()))
         if product in Crafting['Goal'] and (product not in goal_item_min_cost or rule['time'] < goal_item_min_cost[product]):
-            goal_item_min_cost[product] =  {"produced_amt":amt, "required_amt":Crafting['Goal'][product], "time":rule['Time'], "Requires":rule['Requires'], "Consumes":rule['Consumes']}
+            goal_item_min_cost[product] =  {"produced_amt":amt, "required_amt":Crafting['Goal'][product], "time":rule['Time']}
         checker = make_checker(rule)
         effector = make_effector(rule)
         recipe = Recipe(name, checker, effector, rule['Time'])
         all_recipes.append(recipe)
     # Create a function which checks for the goal
-    print("goal_item_min_cost", goal_item_min_cost)
     is_goal = make_goal_checker(Crafting['Goal'])
     heuristic = make_heuristic(Crafting['Goal'], Crafting['Recipes'], goal_item_min_cost)
     # Initialize first state from initial inventory

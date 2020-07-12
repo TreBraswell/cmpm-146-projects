@@ -163,7 +163,7 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
             return 0
         if state[new_item] > limits[new_item]:
             return -1
-        #if state["furnace"]>=1 and 
+        #if state["furnace"]>=1 and
 
         if recipe_name == "punch for wood" and (state['stone_axe'] >=1 or state['iron_axe'] >=1 or  state['wooden_axe'] >=1 ):
             return -1
@@ -200,15 +200,6 @@ def make_heuristic(goal, recipes, goal_item_min_cost):
             if diff>0:
                 diff = ceil(float(diff)/val['produced_amt'])
                 cost += diff * val['time']
-                """if 'Consumes' in val:
-                    for (item2, amt2) in val['Consumes'].items():
-                        diff2 = state[item2] - amt2
-                        if diff2>0:
-                            cost+=diff * diff2
-                if 'Requires' in val:
-                    for (item2, _) in val['Requires'].items():
-                        if state[item2] == 0:
-                            cost+=1"""
         return cost
     return heuristic
 
@@ -230,7 +221,7 @@ def search(graph, state, is_goal, limit, heuristic):
     heappush(frontier, (0,state) ) #putting our instial position with its cost
     came_from = {} # where we have been
     cost_so_far = {} #the cost so far
-    came_from[state] = (0,0) #just setting up the intial destination
+    came_from[state] = (0,'') #just setting up the intial destination
     cost_so_far[state] = 0 #where were starting
     done = 0
     counter = 0
@@ -246,14 +237,15 @@ def search(graph, state, is_goal, limit, heuristic):
         if is_goal(current): # if it equals our goal destnation
             done = 1
             goback = []
-            current = (current,0)
-            while current[0] != 0:
-                goback.insert(0,current)
-                current = came_from[current[0]]
-            goback.pop()
+            (prev, action) = came_from[current]
+            while prev != 0:
+                goback.insert(0,(current, action))
+                current = prev
+                (prev, action) = came_from[prev]
             print(goback)
             #print("final length:", len(goback))
-            tempfinal = cur_cost
+            print("final cost:", cur_cost)
+            print("number of states searched", counter)
 
             break
         #print("loop "+str(counter))
@@ -278,7 +270,6 @@ def search(graph, state, is_goal, limit, heuristic):
 
     print(time() - start_time, 'seconds.')
     if done == 1: # if it equals our goal destnation
-        print("final cost:", tempfinal)
         print("success")
     else:
     # Failed to find a path

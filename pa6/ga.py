@@ -77,7 +77,8 @@ class Individual_Grid(object):
 
     # Create zero or more children from self and other
     def generate_children(self, other):
-        new_genome = copy.deepcopy(self.genome)
+        new_genomeS = copy.deepcopy(self.genome)
+        new_genomeO = copy.deepcopy(other.genome)
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
@@ -87,8 +88,12 @@ class Individual_Grid(object):
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
                 pass
+                # if random.random() > 0.5:
+                #     temp = new_genomeS[y][x]
+                #     new_genomeS[y][x] = new_genomeO[y][x]
+                #     new_genomeO[y][x] = temp
         # do mutation; note we're returning a one-element tuple here
-        return (Individual_Grid(new_genome),)
+        return (Individual_Grid(new_genomeS), Individual_Grid(new_genomeO))
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -344,9 +349,49 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
-    results = []
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
+    results = []
+    popTuple = []
+    selectIndiv = []
+    for i in range(0, len(population)):
+        popTuple.append((population[i],population[i].fitness()))
+    popTuple.sort(key = lambda x: x[1])
+
+    for i in range(0, len(popTuple)):
+        if(random.randrange(0,len(popTuple) - 1) < i):
+            selectIndiv.append(popTuple[i])
+    print("popTuple size: ", len(popTuple))
+    
+    # selectIndiv = []
+    # min = math.inf
+    # max = -math.inf
+    # totalFit = 0
+    # for i in range(0, len(population)): # find max and min values
+    #     val = population[i].fitness()
+    #     if val > max:
+    #         max = val
+    #     if val < min:
+    #         min = val
+    # 
+    # for i in range(0, len(population)):
+    #     totalFit += population[i].fitness() - min
+    # 
+    # print("min/max/total: ", min, " ", max, " ", totalFit)
+    # for i in range(0, len(population)): # select individuals to repopulate with
+    #     #print(((population[i].fitness() - min) / totalFit) * 50.0)
+    #     if(random.uniform(0,1) < ((population[i].fitness() - min) / totalFit) * 100.0): # if possible level
+    #         selectIndiv.append(population[i])
+# 
+    for i in range(0, int(len(selectIndiv) / 2)): # pair selected individuals randomly and repopulate
+        for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
+            results.append(child)
+    # # print("Original population: ", population)
+    # # print("Result population: ", results)
+    print("Original num: ", len(population))
+    print("Result num: ", len(results))
+    # print("genome: ", results[0].genome)
+    # print("fitness: ", results[0].fitness())
     return results
 
 
@@ -384,7 +429,7 @@ def ga():
                     print("Max fitness:", str(best.fitness()))
                     print("Average generation time:", (now - start) / generation)
                     print("Net time:", now - start)
-                    with open("levels/last.txt", 'w') as f:
+                    with open("level.txt", 'w') as f:
                         for row in best.to_level():
                             f.write("".join(row) + "\n")
                 generation += 1

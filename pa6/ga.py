@@ -82,12 +82,76 @@ class Individual_Grid(object):
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
-        right = width - 1
+        right = width - 2
+
+        x = left
+
+        # while x < right:
+        #     nextChunk = min(random.randrange(1,10), right)
+        #     chooseSelf = random.random() > 0.5
+        #     if not chooseSelf:
+        #         while x < nextChunk:
+        #             for y in range(height):
+        #                 temp = new_genomeS[y][x]
+        #                 new_genomeS[y][x] = new_genomeO[y][x]
+        #                 new_genomeO[y][x] = temp
+        #             x += 1
+        #     else:
+        #         x += nextChunk
+                    
+
+
         for y in range(height):
             for x in range(left, right):
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-                pass
+                bSwap = False
+                if new_genomeO[y][x] == '-':
+                    if y == height - 1: # if floor, don't allow gaps larger than 3
+                        count = 0
+                        i = 1
+                        while (new_genomeO[y][x - i] == '-') or (new_genomeO[y][x + i] == '-'):
+                            if new_genomeO[y][x - i] == '-':
+                                count += 1
+                            if new_genomeO[y][x + i] == '-':
+                                count += 1
+                            i += 1
+                        if count >= 4:
+                            bSwap = True
+                    elif random.random() > 0.95: # 5% chance of swapping out empty space
+                        bSwap = True
+                elif new_genomeO[y][x] == 'X':
+                    if new_genomeS[y][x] == '-':
+                        bSwap = random.random() > 0.5
+                elif new_genomeO[y][x] == '?' or new_genomeO[y][x] == 'M':
+                    if (new_genomeO[y - 1][x] != '-') or (new_genomeO[y + 1][x] != '-'): # swap if no empty space above or below
+                        bSwap = True
+                elif new_genomeO[y][x] == 'B':
+                    pass
+                elif new_genomeO[y][x] == 'o':
+                    pass
+                elif new_genomeO[y][x] == '|':
+                    if (new_genomeO[y + 1][x] != 'X') or (new_genomeO[y + 1][x] != '|') or (new_genomeO[y - 1][x] != '|') or (new_genomeO[y - 1][x] != 'T'): # if not properly connected
+                        bSwap = True
+                elif new_genomeO[y][x] == 'T':
+                    if y < height - 4 or new_genomeO[height - 1][x] != 'X':
+                        bSwap = True
+                    else:
+                        y1 = y + 1
+                        while y1 < height - 1:
+                            new_genomeO[y1][x] = '|'
+                            y1 += 1
+                elif new_genomeO[y][x] == 'f':
+                    pass
+                elif new_genomeO[y][x] == 'v':
+                    pass
+                elif new_genomeO[y][x] == 'm':
+                    pass
+
+                if bSwap:
+                    temp = new_genomeS[y][x]
+                    new_genomeS[y][x] = new_genomeO[y][x]
+                    new_genomeO[y][x] = temp
                 # if random.random() > 0.5:
                 #     temp = new_genomeS[y][x]
                 #     new_genomeS[y][x] = new_genomeO[y][x]

@@ -84,79 +84,6 @@ class Individual_Grid(object):
         left = 1
         right = width - 2
 
-        x = left
-
-        # while x < right:
-        #     nextChunk = min(random.randrange(1,10), right)
-        #     chooseSelf = random.random() > 0.5
-        #     if not chooseSelf:
-        #         while x < nextChunk:
-        #             for y in range(height):
-        #                 temp = new_genomeS[y][x]
-        #                 new_genomeS[y][x] = new_genomeO[y][x]
-        #                 new_genomeO[y][x] = temp
-        #             x += 1
-        #     else:
-        #         x += nextChunk
-                    
-
-
-        for y in range(height):
-            for x in range(left, right):
-                # STUDENT Which one should you take?  Self, or other?  Why?
-                # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-                bSwap = False
-                if new_genomeO[y][x] == '-':
-                    if y == height - 1: # if floor, don't allow gaps larger than 3
-                        count = 0
-                        i = 1
-                        while (new_genomeO[y][x - i] == '-') or (new_genomeO[y][x + i] == '-'):
-                            if new_genomeO[y][x - i] == '-':
-                                count += 1
-                            if new_genomeO[y][x + i] == '-':
-                                count += 1
-                            i += 1
-                        if count >= 4:
-                            bSwap = True
-                    elif random.random() > 0.95: # 5% chance of swapping out empty space
-                        bSwap = True
-                elif new_genomeO[y][x] == 'X':
-                    if new_genomeS[y][x] == '-':
-                        bSwap = random.random() > 0.5
-                elif new_genomeO[y][x] == '?' or new_genomeO[y][x] == 'M':
-                    if (new_genomeO[y - 1][x] != '-') or (new_genomeO[y + 1][x] != '-'): # swap if no empty space above or below
-                        bSwap = True
-                elif new_genomeO[y][x] == 'B':
-                    pass
-                elif new_genomeO[y][x] == 'o':
-                    pass
-                elif new_genomeO[y][x] == '|':
-                    if (new_genomeO[y + 1][x] != 'X') or (new_genomeO[y + 1][x] != '|') or (new_genomeO[y - 1][x] != '|') or (new_genomeO[y - 1][x] != 'T'): # if not properly connected
-                        bSwap = True
-                elif new_genomeO[y][x] == 'T':
-                    if y < height - 4 or new_genomeO[height - 1][x] != 'X':
-                        bSwap = True
-                    else:
-                        y1 = y + 1
-                        while y1 < height - 1:
-                            new_genomeO[y1][x] = '|'
-                            y1 += 1
-                elif new_genomeO[y][x] == 'f':
-                    pass
-                elif new_genomeO[y][x] == 'v':
-                    pass
-                elif new_genomeO[y][x] == 'm':
-                    pass
-
-                if bSwap:
-                    temp = new_genomeS[y][x]
-                    new_genomeS[y][x] = new_genomeO[y][x]
-                    new_genomeO[y][x] = temp
-                # if random.random() > 0.5:
-                #     temp = new_genomeS[y][x]
-                #     new_genomeS[y][x] = new_genomeO[y][x]
-                #     new_genomeO[y][x] = temp
-        # do mutation; note we're returning a one-element tuple here
         return (Individual_Grid(new_genomeS), Individual_Grid(new_genomeO))
 
     # Turn the genome into a level string (easy for this genome)
@@ -185,8 +112,10 @@ class Individual_Grid(object):
         g[15][:] = ["X"] * width
         g[14][0] = "m"
         g[7][-1] = "v"
-        g[8:14][-1] = ["f"] * 6
-        g[14:16][-1] = ["X", "X"]
+        for col in range(8, 14):
+            g[col][-1] = "f"
+        for col in range(14, 16):
+            g[col][-1] = "X"
         return cls(g)
 
 
@@ -238,6 +167,20 @@ class Individual_DE(object):
         # STUDENT For example, too many stairs are unaesthetic.  Let's penalize that
         if len(list(filter(lambda de: de[1] == "6_stairs", self.genome))) > 5:
             penalties -= 2
+        if len(list(filter(lambda de: de[1] == "3_coin", self.genome))) < 2: # too few coins
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "0_hole", self.genome))) < 1: # no gaps/holes
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "5_qblock", self.genome))) > 6: # too many qblocks 
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "2_enemy", self.genome))) > 6: # too many enemies
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "2_enemy", self.genome))) < 2: # not enough enemies
+            penalties -= 2
+
+        for item in list(filter(lambda de: de[1] == "0_hole", self.genome)): # connected holes
+            if len(list(filter(lambda de: (de[0] == item[0] + item[2] + 1) and (de[0] == "0_hole"), self.genome))) > 0:
+                penalties -= 2
         # STUDENT If you go for the FI-2POP extra credit, you can put constraint calculation in here too and cache it in a new entry in __slots__.
         self._fitness = sum(map(lambda m: coefficients[m] * measurements[m],
                                 coefficients)) + penalties
@@ -409,7 +352,7 @@ class Individual_DE(object):
         return Individual_DE(g)
 
 
-Individual = Individual_Grid
+Individual = Individual_DE
 
 
 def generate_successors(population):
@@ -427,31 +370,21 @@ def generate_successors(population):
             selectIndiv.append(popTuple[i])
     print("popTuple size: ", len(popTuple))
     
-    # selectIndiv = []
-    # min = math.inf
-    # max = -math.inf
-    # totalFit = 0
-    # for i in range(0, len(population)): # find max and min values
-    #     val = population[i].fitness()
-    #     if val > max:
-    #         max = val
-    #     if val < min:
-    #         min = val
-    # 
-    # for i in range(0, len(population)):
-    #     totalFit += population[i].fitness() - min
-    # 
-    # print("min/max/total: ", min, " ", max, " ", totalFit)
-    # for i in range(0, len(population)): # select individuals to repopulate with
-    #     #print(((population[i].fitness() - min) / totalFit) * 50.0)
-    #     if(random.uniform(0,1) < ((population[i].fitness() - min) / totalFit) * 100.0): # if possible level
-    #         selectIndiv.append(population[i])
-# 
     for i in range(0, int(len(selectIndiv) / 2)): # pair selected individuals randomly and repopulate
-        for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
-            results.append(child)
+        if len(selectIndiv[i][0].genome) == 0:
+            results.append(selectIndiv[i + int(len(selectIndiv) / 2)][0])
+        elif len(selectIndiv[i + int(len(selectIndiv) / 2)][0].genome) == 0:
+            results.append(selectIndiv[i][0])
+        else:
+            for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
+                results.append(child)
+        # for child in selectIndiv[i + int(len(selectIndiv) / 2)][0].generate_children(selectIndiv[i][0]):
+        #     results.append(child)
     # # print("Original population: ", population)
     # # print("Result population: ", results)
+    for item in selectIndiv:
+        if len(results) < 200:
+            results.append(item[0])
     print("Original num: ", len(population))
     print("Result num: ", len(results))
     # print("genome: ", results[0].genome)

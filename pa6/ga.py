@@ -194,11 +194,11 @@ class Individual_Grid(object):
         for i in range(0,7):
             genome[i][-1] = "-"
 
-        genome[7][-3] = "v"
-        for col in range(8, 14):
-            genome[col][-3] = "f"
-        for col in range(14, 16):
-            genome[col][-3] = "X"
+        # genome[7][-3] = "v"
+        # for col in range(8, 14):
+        #     genome[col][-3] = "f"
+        # for col in range(14, 16):
+        #     genome[col][-3] = "X"
 
         return genome
 
@@ -701,8 +701,12 @@ def ga():
                 generation += 1
                 # STUDENT Determine stopping condition
                 stop_condition = False
-                if best.fitness() > 2.9 and metrics.metrics(best.to_level())['solvability'] == 1:
-                    stop_condition = True
+                if Individual == Individual_DE:
+                    if best.fitness() > 2.9 and metrics.metrics(best.to_level())['solvability'] == 1:
+                        stop_condition = True
+                elif Individual == Individual_Grid:
+                    if best.fitness() > 4 and metrics.metrics(best.to_level())['solvability'] == 1:
+                        stop_condition = True
                 if stop_condition:
                     break
                 # STUDENT Also consider using FI-2POP as in the Sorenson & Pasquier paper

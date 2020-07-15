@@ -377,6 +377,29 @@ class Individual_DE(object):
         # STUDENT For example, too many stairs are unaesthetic.  Let's penalize that
         if len(list(filter(lambda de: de[1] == "6_stairs", self.genome))) > 5:
             penalties -= 2
+        if len(list(filter(lambda de: de[1] == "3_coin", self.genome))) < 2: # too few coins
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "0_hole", self.genome))) < 1: # no gaps/holes
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "5_qblock", self.genome))) > 6: # too many qblocks 
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "2_enemy", self.genome))) > 6: # too many enemies
+            penalties -= 2
+        if len(list(filter(lambda de: de[1] == "2_enemy", self.genome))) < 2: # not enough enemies
+            penalties -= 2
+
+        for item in list(filter(lambda de: de[1] == "0_hole", self.genome)): # connected holes
+            try:
+                if self.to_level()[15][item[0] + item[2]] == "-":
+                    penalties -= 6
+            except:
+                    pass
+
+        for x in range(0,2): # check for cluttering around mario
+            for item in list(filter(lambda de: de[0] == x, self.genome)):
+                if item[1] != "4_block" or item[2] != 15:
+                    penalties -= 4
+                
         # STUDENT If you go for the FI-2POP extra credit, you can put constraint calculation in here too and cache it in a new entry in __slots__.
         self._fitness = sum(map(lambda m: coefficients[m] * measurements[m],
                                 coefficients)) + penalties
@@ -411,16 +434,29 @@ class Individual_DE(object):
                 y = de[2]
                 has_powerup = de[3]  # boolean
                 if choice < 0.33:
-                    x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                    try:
+                        count = 0
+                        while self.to_level()[y + 1][x] != "-" and x > 14 and count < 16:
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                            count += 1
+                    except:
+                        pass
                 elif choice < 0.66:
-                    y = offset_by_upto(y, height / 2, min=0, max=height - 1)
+                    try:
+                        count = 0
+                        while self.to_level()[y + 1][x] != "-" and count < 200:
+                            y = offset_by_upto(y, height / 2, min=0, max=height - 1)
+                            count += 1
+                    except:
+                        pass
                 else:
                     has_powerup = not de[3]
                 new_de = (x, de_type, y, has_powerup)
             elif de_type == "3_coin":
                 y = de[2]
                 if choice < 0.5:
-                    x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                    while x > 14:
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
                 else:
                     y = offset_by_upto(y, height / 2, min=0, max=height - 1)
                 new_de = (x, de_type, y)
@@ -434,8 +470,23 @@ class Individual_DE(object):
             elif de_type == "0_hole":
                 w = de[2]
                 if choice < 0.5:
-                    x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                    try:
+                        count = 0
+                        while self.to_level()[y][x + w] == "-" and count < 200:
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                            count += 1
+                    except:
+                        pass
                 else:
+                    try:
+                        count = 0
+                        while self.to_level()[y][x + w] == "-" and count < 8:
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                            count += 1
+                        else:
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                    except:
+                        pass
                     w = offset_by_upto(w, 4, min=1, max=width - 2)
                 new_de = (x, de_type, w)
             elif de_type == "6_stairs":
@@ -462,7 +513,16 @@ class Individual_DE(object):
                     madeof = random.choice(["?", "X", "B"])
                 new_de = (x, de_type, w, y, madeof)
             elif de_type == "2_enemy":
-                pass
+                x = de[0]
+                y = de[0]
+                if self.to_level()[15][x] == "X":
+                    try:
+                        count = 0
+                        while self.to_level()[y][x] != "X" and count < 200: 
+                            x = offset_by_upto(x, width / 8, min=1, max=width - 2)
+                            count += 1
+                    except:
+                        pass
             new_genome.pop(to_change)
             heapq.heappush(new_genome, new_de)
         return new_genome
@@ -567,49 +627,33 @@ def generate_successors(population):
     
     #selectIndiv = popTuple
 
-    selectIndiv.append(popTuple[0])
-    for i in range(1, len(popTuple)):
-        if( pr(100)):
+    #roulette
+    for i in range(0, len(popTuple)):
+        if(random.randrange(0,len(popTuple) - 1) < i):
             selectIndiv.append(popTuple[i])
-    
-    print("popTuple size: ", len(popTuple))
-    
-    
 
-    for i in range(0, math.floor(len(selectIndiv)/2)):
-        results += selectIndiv[0][0].generate_children(selectIndiv[random.randint(0, len(selectIndiv)-1)][0])
-
-    #results.pop()
-    #results += [selectIndiv[0][0]] # keep the best parent
-    # selectIndiv = []
-    # min = math.inf
-    # max = -math.inf
-    # totalFit = 0
-    # for i in range(0, len(population)): # find max and min values
-    #     val = population[i].fitness()
-    #     if val > max:
-    #         max = val
-    #     if val < min:
-    #         min = val
-    # 
-    # for i in range(0, len(population)):
-    #     totalFit += population[i].fitness() - min
-    # 
-    # print("min/max/total: ", min, " ", max, " ", totalFit)
-    # for i in range(0, len(population)): # select individuals to repopulate with
-    #     #print(((population[i].fitness() - min) / totalFit) * 50.0)
-    #     if(random.uniform(0,1) < ((population[i].fitness() - min) / totalFit) * 100.0): # if possible level
-    #         selectIndiv.append(population[i])
-# 
+    #elitism
+    b = int(len(popTuple)/2)
+    while b<len(popTuple):
+        temp= popTuple[b]
+        results.append(temp[0])
+        b = b +1
     
-    
-    #for i in range(0, int(len(selectIndiv))): # pair selected individuals randomly and repopulate
-    #    for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
-    #        results.append(child)
-    
-    
+    for i in range(0, int(len(selectIndiv) / 2)): # pair selected individuals randomly and repopulate
+        if len(selectIndiv[i][0].genome) == 0:
+            results.append(selectIndiv[i + int(len(selectIndiv) / 2)][0])
+        elif len(selectIndiv[i + int(len(selectIndiv) / 2)][0].genome) == 0:
+            results.append(selectIndiv[i][0])
+        else:
+            for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
+                results.append(child)
+        # for child in selectIndiv[i + int(len(selectIndiv) / 2)][0].generate_children(selectIndiv[i][0]):
+        #     results.append(child)
     # # print("Original population: ", population)
     # # print("Result population: ", results)
+    for item in selectIndiv:
+        if len(results) < 200:
+            results.append(item[0])
     print("Original num: ", len(population))
     print("Result num: ", len(results))
     # print("genome: ", results[0].genome)
@@ -645,8 +689,8 @@ def ga():
             while True:
                 now = time.time()
                 # Print out statistics
+                best = max(population, key=Individual.fitness)
                 if generation > 0:
-                    best = max(population, key=Individual.fitness)
                     print("Generation:", str(generation))
                     print("Max fitness:", str(best.fitness()))
                     print("Average generation time:", (now - start) / generation)
@@ -657,6 +701,8 @@ def ga():
                 generation += 1
                 # STUDENT Determine stopping condition
                 stop_condition = False
+                if best.fitness() > 2.9 and metrics.metrics(best.to_level())['solvability'] == 1:
+                    stop_condition = True
                 if stop_condition:
                     break
                 # STUDENT Also consider using FI-2POP as in the Sorenson & Pasquier paper
@@ -683,6 +729,6 @@ if __name__ == "__main__":
     now = time.strftime("%m_%d_%H_%M_%S")
     # STUDENT You can change this if you want to blast out the whole generation, or ten random samples, or...
     for k in range(0, 10):
-        with open("levels/" + now + "_" + str(k) + ".txt", 'w') as f:
+        with open( now + "_" + str(k) + ".txt", 'w') as f:
             for row in final_gen[k].to_level():
                 f.write("".join(row) + "\n")

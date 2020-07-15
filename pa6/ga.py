@@ -76,7 +76,7 @@ class Individual_Grid(object):
         left = 3
         right = width - 5
         items = {
-            "-":10,
+            "-":0,
             "X":0,
             "B":0,
             "E":10,
@@ -129,17 +129,17 @@ class Individual_Grid(object):
 
                     
                     if(genome[y+1][x] == "-" and genome[y+2][x] == "-"):
-                        if(pr(30)):
+                        if(pr(5)):
                             genome[y][x] = random.choice(['?', 'M'])
 
                     if genome[y][x] in ['X','B']:
                         new_x = x
                         new_y = y
                         
-                        while new_y > 1 and genome[new_y][new_x] in ["X",'B']:
+                        while new_y > 2 and genome[new_y][new_x] in ["X",'B']:
                             new_y-=1
-                        if abs(new_y - y) > 1:
-                            genome[new_y-1][x] = "-"
+                        if abs(new_y - y) > 2:
+                            genome[new_y+1][x] = "-"
                         new_y = y
                     
                     
@@ -149,8 +149,8 @@ class Individual_Grid(object):
                             new_y = random.randint(-4,1) + 1 + new_y
                             if genome[new_y][new_x] not in ['o', '|', 'T']:
                                     genome[new_y][new_x] = genome[y][x]
-                        elif random.randint(0,100) < 100 - 100*(y/16) and genome[new_y-1][new_x] not in ['E', '?', 'M', 'o', '|', 'T']:
-                            if genome[new_y][new_x] not in ['E', '?', 'M', 'o', '|', 'T']:    
+                        elif random.randint(0,100) < 100 - 100*(y/16) and genome[new_y-1][new_x] not in ['?', 'M', '|', 'T']:
+                            if genome[new_y][new_x] not in ['?', 'M', '|', 'T']:    
                                 genome[new_y][new_x] = '-'
                 
                     #if genome[y][x] == 'E' and genome[y+1][x] != 'X':
@@ -158,7 +158,7 @@ class Individual_Grid(object):
 
                     if genome[y][x] in ['?', 'M']:
                         keep = False
-                        for off_x in range(-4,4):
+                        for off_x in range(-2,2):
                             for off_y in range(2, 4):
                                 if genome[y+off_y][x+off_x] in  ["X", "B"]:
                                     keep = True

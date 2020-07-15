@@ -28,6 +28,10 @@ options = [
 
 # The level as a grid of tiles
 
+def pr(percent):
+    return random.randint(0,100) <= percent
+
+
 
 class Individual_Grid(object):
     __slots__ = ["genome", "_fitness"]
@@ -63,37 +67,231 @@ class Individual_Grid(object):
         return self._fitness
 
     # Mutate a genome into a new genome.  Note that this is a _genome_, not an individual!
+    #This should be static
     def mutate(self, genome):
         # STUDENT implement a mutation operator, also consider not mutating this individual
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
 
-        left = 1
-        right = width - 1
-        for y in range(height):
-            for x in range(left, right):
-                pass
+        left = 3
+        right = width - 5
+        items = {
+            "-":10,
+            "X":0,
+            "B":0,
+            "E":10,
+            "?":0,
+            "M":0,
+            "o":10,
+            "|":0,
+            "T":0
+        }
+        
+        for i in items.keys():
+            for p in range(items[i]):
+                x = random.randint(left,right)
+                y = random.randint(0,height-1)
+                genome[y][x] = i
+
+        
+
+        for x in range(left, right):
+            for y in range(height):
+                #x = random.randint(left,right)
+                #y = random.randint(0,height-1)
+                try:
+
+                    if (genome[y][x] == '|' and not (genome[y+1][x] == 'X' or genome[y+1][x] == '|')):
+                        genome[y][x] = '-'
+                    if genome[y][x] == '|':
+                        if pr(70) and genome[y-1][x] != "T":
+                            genome[y-1][x] = "|"
+                        else:
+                            genome[y-1][x] = "T"
+                            genome[y-2][x] = "-"
+                        
+                    if genome[y][x] == 'T' and genome[y+1][x] != '|':
+                        genome[y][x] = '-'
+                    
+
+                    if genome[y][x] in ['B', 'E', '?', 'M']:
+                        if genome[y+1][x] != "-" and genome[y+2][x] != "-":
+                            genome[y-2][x] = genome[y][x]
+                            genome[y-1][x] = "-"
+                            genome[y][x] = "-"
+
+                    
+                    if genome[y][x] == "-":
+                        if genome[y+1][x] not in ["-", "o"] and genome[y-1][x] not in ["-", "o"]:
+                            genome[y+1][x] = "-"
+                            genome[y-1][x] = "-"
+                            
+
+                    
+                    if(genome[y+1][x] == "-" and genome[y+2][x] == "-"):
+                        if(pr(30)):
+                            genome[y][x] = random.choice(['?', 'M'])
+
+                    if genome[y][x] in ['X','B']:
+                        new_x = x
+                        new_y = y
+                        
+                        while new_y > 1 and genome[new_y][new_x] in ["X",'B']:
+                            new_y-=1
+                        if abs(new_y - y) > 1:
+                            genome[new_y-1][x] = "-"
+                        new_y = y
+                    
+                    
+
+                        if random.randint(0,100) < (100*(y/16)):
+                            new_x = random.randint(2,4) - 1 + new_x
+                            new_y = random.randint(-4,1) + 1 + new_y
+                            if genome[new_y][new_x] not in ['o', '|', 'T']:
+                                    genome[new_y][new_x] = genome[y][x]
+                        elif random.randint(0,100) < 100 - 100*(y/16) and genome[new_y-1][new_x] not in ['E', '?', 'M', 'o', '|', 'T']:
+                            if genome[new_y][new_x] not in ['E', '?', 'M', 'o', '|', 'T']:    
+                                genome[new_y][new_x] = '-'
+                
+                    #if genome[y][x] == 'E' and genome[y+1][x] != 'X':
+                    #    genome[y][x] = '-'
+
+                    if genome[y][x] in ['?', 'M']:
+                        keep = False
+                        for off_x in range(-4,4):
+                            for off_y in range(2, 4):
+                                if genome[y+off_y][x+off_x] in  ["X", "B"]:
+                                    keep = True
+                        if not keep:
+                            genome[y][x] = "-"
+                            pass
+
+                    #drop coins
+                    if genome[y][x] in ['o', 'E']:
+                        if y+1 > height:
+                            genome[y][x] = "-"
+                        if genome[y+1][x] == "-" and pr(10):
+                            genome[y+1][x] = genome[y][x]
+                            genome[y][x] = "-"
+                    
+                        
+
+                    #if genome[y][x] == '?' or genome[y][x] == 'M' or genome[y][x] == 'B' or genome[y][x] == 'o':
+                    #    genome[y][x] = '-'
+
+                except:
+                    pass
+        
+
+        for i in range(height-2):
+            genome[i][0:5] = ["-"] * 5
+        genome[14][1:5] = ["-"] * 4
+        genome[13][1:5] = ["-"] * 4
+        
+        for i in range(height-1):
+            genome[i][-5:-1] = ["-"] * 4
+        
+        for i in range(0,7):
+            genome[i][-1] = "-"
+
+        genome[7][-3] = "v"
+        for col in range(8, 14):
+            genome[col][-3] = "f"
+        for col in range(14, 16):
+            genome[col][-3] = "X"
+
         return genome
 
     # Create zero or more children from self and other
     def generate_children(self, other):
         new_genomeS = copy.deepcopy(self.genome)
         new_genomeO = copy.deepcopy(other.genome)
+        #genomeS = copy.deepcopy(self.genome)
+        #genomeO = copy.deepcopy(other.genome)
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
         right = width - 1
-        for y in range(height):
+        
+        """for i in range(1000):
+            x = random.randint(left,right - 5)
+            y = random.randint(0,height-5)
+
+            temp = new_genomeS[y][x]
+            new_genomeO[y][x] = new_genomeS[y][x]
+            new_genomeS[y][x] = temp 
+
+            
+
+            pass
+        """
+        
+        
+        """
+        for x in range(left, right):
+            s = 0
+            o = 0
+            for y in range(height):
+                if new_genomeS[y][x] == "-":
+                    s+=1
+                    new_genomeO[y][x] = new_genomeS[y][x]
+
+                if new_genomeO[y][x] == "-":
+                    o+=1
+                    new_genomeS[y][x] = new_genomeO[y][x]
+        """
+        
+        
+        
+        for x in range(left, right):
+            x += random.randint(0,20)  
+            for offset in range(10):
+                if(x+offset) >= right:
+                    break
+                for y in range(height):
+                    #[y][x]
+                    temp = new_genomeS[y][x+offset]
+                    new_genomeS[y][x+offset] = new_genomeO[y][x+offset]
+                    new_genomeO[y][x+offset] = temp
+                    pass
+                x+=10
+        new_genomeO = self.mutate(new_genomeO)
+        new_genomeS = self.mutate(new_genomeS)
+        """        
+        ngo = new_genomeO
+        ngs = new_genomeS
+        for y in range(0,height):
             for x in range(left, right):
-                # STUDENT Which one should you take?  Self, or other?  Why?
-                # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
+                if ngs[y][x] == 'X':
+                    count = 0
+                    l = x
+                    while ngs[y][l] == "X" and l < right:
+                        count+=1
+                        l+=1
+                    r = x
+                    while ngs[y][r] == "X" and r > left:
+                        count+=1
+                        r-=1
+                    if  count < 1:
+                        while r < l:
+                            ngs[y][r] = "-"
+                            r+=1
+                if ngs[y][x] == 'E' and ngs[y-1][x] != 'X':
+                    ngs[y][x] == "-"
+                if ngs[y][x] == '|':
+                    for a in range(y, 0, -1):
+                        if ngs[a][x] == 'T':
+                            break
+                        if ngs[a][x] != '|':
+                            ngs[a][x] = '-'
+                            break
+                if ngs[y][x] == '?' or 'M' or 'B' or 'o':
+                    ngs[y][x] = '-' 
+
                 pass
-                # if random.random() > 0.5:
-                #     temp = new_genomeS[y][x]
-                #     new_genomeS[y][x] = new_genomeO[y][x]
-                #     new_genomeO[y][x] = temp
-        # do mutation; note we're returning a one-element tuple here
-        return (Individual_Grid(new_genomeS), Individual_Grid(new_genomeO))
+            """
+
+        return (Individual_Grid(new_genomeS), Individual_Grid(new_genomeS))
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -118,11 +316,16 @@ class Individual_Grid(object):
         # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
         # STUDENT also consider weighting the different tile types so it's not uniformly random
         g = [random.choices(options, k=width) for row in range(height)]
+        
         g[15][:] = ["X"] * width
         g[14][0] = "m"
         g[7][-1] = "v"
-        g[8:14][-1] = ["f"] * 6
-        g[14:16][-1] = ["X", "X"]
+        for col in range(8, 14):
+            g[col][-1] = "f"
+        for col in range(14, 16):
+            g[col][-1] = "X"
+        #g[8:14][-1] = ["f"] * 6
+        #g[14:16][-1] = ["X", "X"]
         return cls(g)
 
 
@@ -356,13 +559,28 @@ def generate_successors(population):
     selectIndiv = []
     for i in range(0, len(population)):
         popTuple.append((population[i],population[i].fitness()))
-    popTuple.sort(key = lambda x: x[1])
+    popTuple.sort(key = lambda x: x[1], reverse = True)
+    #popTuple.pop()
+    #for i in range(math.floor((len(popTuple)+1)/3)):
+    
+    #remove the weakest
+    
+    #selectIndiv = popTuple
 
-    for i in range(0, len(popTuple)):
-        if(random.randrange(0,len(popTuple) - 1) < i):
+    selectIndiv.append(popTuple[0])
+    for i in range(1, len(popTuple)):
+        if( pr(100)):
             selectIndiv.append(popTuple[i])
+    
     print("popTuple size: ", len(popTuple))
     
+    
+
+    for i in range(0, math.floor(len(selectIndiv)/2)):
+        results += selectIndiv[0][0].generate_children(selectIndiv[random.randint(0, len(selectIndiv)-1)][0])
+
+    #results.pop()
+    #results += [selectIndiv[0][0]] # keep the best parent
     # selectIndiv = []
     # min = math.inf
     # max = -math.inf
@@ -383,9 +601,13 @@ def generate_successors(population):
     #     if(random.uniform(0,1) < ((population[i].fitness() - min) / totalFit) * 100.0): # if possible level
     #         selectIndiv.append(population[i])
 # 
-    for i in range(0, int(len(selectIndiv) / 2)): # pair selected individuals randomly and repopulate
-        for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
-            results.append(child)
+    
+    
+    #for i in range(0, int(len(selectIndiv))): # pair selected individuals randomly and repopulate
+    #    for child in selectIndiv[i][0].generate_children(selectIndiv[i + int(len(selectIndiv) / 2)][0]):
+    #        results.append(child)
+    
+    
     # # print("Original population: ", population)
     # # print("Result population: ", results)
     print("Original num: ", len(population))
@@ -397,7 +619,7 @@ def generate_successors(population):
 
 def ga():
     # STUDENT Feel free to play with this parameter
-    pop_limit = 480
+    pop_limit = 50
     # Code to parallelize some computations
     batches = os.cpu_count()
     if pop_limit % batches != 0:
